@@ -136,15 +136,82 @@ Explicitly excluded for this milestone. Documented to prevent scope creep.
 
 Populated during roadmap creation — each requirement maps to exactly one phase.
 
+> **Count correction:** The "v1 Requirements" headline previously read "45 total," but the enumerated REQ-IDs in this document total **55**. The roadmap maps all 55. Counts below reflect the accurate enumeration.
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (to be filled by roadmapper) | — | Pending |
+| FOUND-01 | Phase 1 | Pending |
+| FOUND-02 | Phase 1 | Pending |
+| FOUND-03 | Phase 1 | Pending |
+| FOUND-04 | Phase 1 | Pending |
+| FOUND-05 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| AUTH-05 | Phase 1 | Pending |
+| COMP-01 | Phase 1 | Pending |
+| DATA-01 | Phase 2 | Pending |
+| DATA-02 | Phase 2 | Pending |
+| DATA-03 | Phase 2 | Pending |
+| DATA-04 | Phase 2 | Pending |
+| DATA-05 | Phase 2 | Pending |
+| SCORE-01 | Phase 3 | Pending |
+| SCORE-02 | Phase 3 | Pending |
+| SCORE-03 | Phase 3 | Pending |
+| SCORE-04 | Phase 3 | Pending |
+| SCORE-05 | Phase 3 | Pending |
+| STOCK-01 | Phase 4 | Pending |
+| STOCK-02 | Phase 4 | Pending |
+| STOCK-03 | Phase 4 | Pending |
+| STOCK-04 | Phase 4 | Pending |
+| STOCK-05 | Phase 4 | Pending |
+| STOCK-06 | Phase 4 | Pending |
+| STOCK-08 | Phase 4 | Pending |
+| FUND-01 | Phase 4 | Pending |
+| FUND-02 | Phase 4 | Pending |
+| FUND-03 | Phase 4 | Pending |
+| FUND-04 | Phase 4 | Pending |
+| FUND-05 | Phase 4 | Pending |
+| COMP-02 | Phase 4 | Pending |
+| COMP-03 | Phase 4 | Pending |
+| COMP-04 | Phase 4 | Pending |
+| SRCH-01 | Phase 5 | Pending |
+| WATCH-01 | Phase 5 | Pending |
+| WATCH-02 | Phase 5 | Pending |
+| NEWS-01 | Phase 6 | Pending |
+| NEWS-02 | Phase 6 | Pending |
+| NEWS-03 | Phase 6 | Pending |
+| NEWS-04 | Phase 6 | Pending |
+| CHAT-01 | Phase 7 | Pending |
+| CHAT-02 | Phase 7 | Pending |
+| CHAT-03 | Phase 7 | Pending |
+| CHAT-04 | Phase 7 | Pending |
+| CHAT-05 | Phase 7 | Pending |
+| STOCK-07 | Phase 7 | Pending |
+| SEO-01 | Phase 8 | Pending |
+| SEO-02 | Phase 8 | Pending |
+| SEO-03 | Phase 8 | Pending |
+| SEO-04 | Phase 8 | Pending |
+| LAND-01 | Phase 9 | Pending |
+| LAND-02 | Phase 9 | Pending |
 
 **Coverage:**
-- v1 requirements: 45 total
-- Mapped to phases: (pending roadmap)
-- Unmapped: (pending roadmap)
+- v1 requirements: 55 total (enumerated REQ-IDs; supersedes the stale "45" headline)
+- Mapped to phases: 55
+- Unmapped: 0
+
+**Per-phase counts:**
+- Phase 1: 11 (FOUND ×5, AUTH ×5, COMP-01)
+- Phase 2: 5 (DATA ×5)
+- Phase 3: 5 (SCORE ×5)
+- Phase 4: 15 (STOCK-01..06, STOCK-08, FUND ×5, COMP-02..04)
+- Phase 5: 3 (SRCH-01, WATCH ×2)
+- Phase 6: 4 (NEWS ×4)
+- Phase 7: 6 (CHAT ×5, STOCK-07)
+- Phase 8: 4 (SEO ×4)
+- Phase 9: 2 (LAND ×2)
 
 ---
 *Requirements defined: 2026-05-27*
-*Last updated: 2026-05-27 after initial definition*
+*Last updated: 2026-05-27 after roadmap traceability mapping*

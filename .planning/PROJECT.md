@@ -73,7 +73,7 @@ Plain-English score, verdict, and reasoning for any Indian stock or mutual fund 
 - **AI invariant (NON-NEGOTIABLE)**: Gemini NEVER generates a number. All scores, prices, and metrics are computed deterministically from real data. Gemini only writes the narrative summary, SWOT bullets, news sentiment classification, and conversational chat — always with cited data sources, never hallucinated figures.
 - **Performance**: Stock report must render full content in < 2 seconds on a 4G connection. Aggressive caching (Redis hot path, Gemini context cache with 24h/7d TTLs).
 - **Data**: Free-tier sources for v1, 15-minute delayed prices acceptable (no NSE/BSE data licence needed for delayed display). Multi-source fallback + cache to survive rate limits.
-- **Data residency / security**: User PII and financial data hosted in ap-south-1 (AWS Mumbai) when self-hosted. No raw broker passwords ever stored; secrets in a secret manager. DPDP Act 2023 consent flow on first launch.
+- **Data residency / security**: Deploy **MongoDB Atlas in the Mumbai (ap-south-1) region** — Atlas Vector Search + Atlas Search are Atlas-only, not available on self-hosted Community MongoDB. Atlas-Mumbai satisfies both the feature requirement and DPDP residency intent. No raw broker passwords ever stored; secrets in a secret manager. DPDP Act 2023 consent flow (timestamped record) on first sign-up.
 - **AI cost**: Gemini Flash / Flash-Lite for high-volume narrative + sentiment; 2.5 Pro reserved for deep reasoning. Context caching for 90% discount on repeated stock/fund context.
 
 ## Key Decisions
