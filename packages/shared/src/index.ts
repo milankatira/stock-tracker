@@ -2,6 +2,7 @@ export * from "./api-errors";
 export * from "./instruments";
 export * from "./providers";
 export * from "./scoring";
+export * from "./stock-report";
 export * from "./verdict";
 
 /**

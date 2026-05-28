@@ -59,6 +59,16 @@ export const envSchema = z.object({
   // Phase 2 ingestion — optional supplemental news API key. Adapter is a
   // graceful no-op when this is absent, so unset (or empty) is valid.
   NEWSDATA_IO_API_KEY: z.string().min(1).optional(),
+
+  // Phase 4 narrative-batch → Next.js revalidate webhook. Both vars are
+  // optional in this phase — ReportsService.bustCache logs and skips
+  // the HMAC POST when either is unset. Production sets both; Plan
+  // 04-04 ships the receiver.
+  REVALIDATE_HMAC_SECRET: z
+    .string()
+    .min(16, "REVALIDATE_HMAC_SECRET must be at least 16 chars")
+    .optional(),
+  REVALIDATE_WEBHOOK_URL: z.string().url().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
