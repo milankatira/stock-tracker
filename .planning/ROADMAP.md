@@ -76,7 +76,13 @@ Plans:
   3. The full report renders in under 2 seconds on 4G via a materialised read path (Redis → Mongo) with no live AI call.
   4. Every AI-generated output (narrative, SWOT) passes through the single compliance interceptor before reaching the client, and the one-paragraph summary is precomputed via the narrative batch job.
   5. Every report and returns view shows the "analysis not advice" + "past performance" disclaimers, and narrative numbers are template-inserted and pass a post-generation numeric audit (no invented figures).
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 04-01-PLAN.md — AIModule + class-scoped ComplianceInterceptor + private Gemini client + ESLint architecture rule + sanitiser/audit/template-slot libraries (COMP-02, COMP-04 foundation)
+- [ ] 04-02-PLAN.md — Narrative-batch BullMQ job + versioned cache key + structured Gemini output + audit retry + deterministic fallback (COMP-04 finalisation)
+- [ ] 04-03-PLAN.md — Stock report API + ReportDoc Mongo schema + Redis hot cache + peer-set fallback + k6 perf gate (STOCK-01..06, STOCK-08, COMP-03)
+- [ ] 04-04-PLAN.md — Stock report Next.js page (RSC + Suspense streaming) + 11 report components + PriceChart v5 + revalidate webhook receiver (STOCK-01..05 UI)
+- [ ] 04-05-PLAN.md — MF report API + page + fund narrative-batch + "Higher-scoring peers" card (FUND-01..05)
 **UI hint**: yes
 
 ### Phase 5: Search & Watchlist
@@ -156,7 +162,7 @@ Plans:
 | 1. Foundation, Auth & Compliance Contract | 0/4 | Planned | - |
 | 2. Data Ingestion & Instrument Master | 0/0 | Not started | - |
 | 3. Scoring Engine & Nightly Recompute | 0/3 | Planned | - |
-| 4. Reports, AI Narrative & Active Compliance | 0/0 | Not started | - |
+| 4. Reports, AI Narrative & Active Compliance | 0/5 | Not started | - |
 | 5. Search & Watchlist | 0/2 | Planned | - |
 | 6. News Feed & Sentiment | 0/2 | Not started | - |
 | 7. Ask FinSight Chat & Comparison | 0/4 | Planned | - |
