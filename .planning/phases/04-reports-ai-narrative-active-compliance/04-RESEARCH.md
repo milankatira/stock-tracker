@@ -12,10 +12,11 @@ Phase 4 is where every locked invariant from the architecture becomes user-visib
 
 The architectural shape is fully prescribed by the project's two non-negotiable invariants (numbers are deterministic; all AI passes the compliance chokepoint). The remaining design surface is concrete: how to layer Suspense streaming in App Router so the score gauge paints first; how to template-slot Gemini's narrative so digits come from verified `ScoreInput` not from token sampling; how to assemble the `ComplianceInterceptor` so it is a global guard on every AIModule response rather than a "remember to call it" helper; and how to wire Redis hot-cache + `revalidateTag` invalidation off the nightly recompute so EOD changes propagate without a manual purge.
 
-**Primary recommendation:** Build the read path as a single denormalised `ReportDoc` per instrument (already-shaped for the page) hot in Redis (TTL until next recompute), invalidated by `dataVersionHash` from the EOD job. The Next.js RSC page does **one** `fetch` to the NestJS report endpoint, streams the score+verdict shell first via Suspense, and chunks in cards/chart/peers as data resolves. Gemini narrative is **structured-JSON** output with named placeholders (`{score}`, `{pe}`, `{return1y}`) — the server fills the digits from the same `ScoreInput` Phase 3 produced; a regex numeric audit rejects + regenerates any narrative whose tokens don't match. The `ComplianceInterceptor` is **global** (`APP_INTERCEPTOR`), wraps the AIModule facade, and is unit-tested with a fixture pack of forbidden-verb narratives that must be blocked.
+**Primary recommendation:** Build the read path as a single denormalised `ReportDoc` per instrument (already-shaped for the page) hot in Redis (TTL until next recompute), invalidated by `dataVersionHash` from the EOD job. The Next.js RSC page does **one** `fetch` to the NestJS report endpoint, streams the score+verdict shell first via Suspense, and chunks in cards/chart/peers as data resolves. Gemini narrative is **structured-JSON** output with named placeholders (`{score}`, `{pe}`, `{return1y}`) — the server fills the digits from the same `ScoreInput` Phase 3 produced; a regex numeric audit rejects + regenerates any narrative whose tokens don't match. The `ComplianceInterceptor` is scoped to the `AiService` class via `@UseInterceptors` (not global `APP_INTERCEPTOR` — see Pattern 3 for the reasoning), backed by a private Gemini client and an ESLint `no-restricted-imports` rule that together make 'no AI without compliance' enforceable by construction; the interceptor is unit-tested with a fixture pack of forbidden-verb narratives that must be blocked.
 
 ---
 
+<user_constraints>
 ## User Constraints (from CONTEXT.md / phase brief)
 
 > No CONTEXT.md exists for this phase. Constraints below are taken verbatim from the phase brief's `<locked_decisions_no_relitigation>` and `<focus_areas>` blocks plus PROJECT.md and the project-wide ARCHITECTURE/STACK/PITFALLS research.
@@ -41,9 +42,11 @@ The architectural shape is fully prescribed by the project's two non-negotiable 
 - **Comparison verdict (2-3 way)** — STOCK-07 lives in Phase 7.
 - **Public SEO `/stock/[ticker]` page (unauth)** — Phase 8. Phase 4 ships the auth-gated variant + the shared renderer.
 - **Watchlist add/remove from report** — Phase 5.
+</user_constraints>
 
 ---
 
+<phase_requirements>
 ## Phase Requirements
 
 | ID | Description | Research Support |
@@ -63,6 +66,7 @@ The architectural shape is fully prescribed by the project's two non-negotiable 
 | **COMP-02** | Every AI-generated output passes through a single compliance interceptor before reaching the client | §"Architecture Patterns — Interceptor Chokepoint", §"Code Examples — ComplianceInterceptor skeleton" |
 | **COMP-03** | Every report and returns view shows "analysis not advice" + "past performance" disclaimers | §"Disclaimer Injection", §"Security Domain" |
 | **COMP-04** | AI narrative numbers are template-inserted and pass post-generation numeric audit | §"Architecture Patterns — Template-Slot", §"Code Examples — Numeric Audit" |
+</phase_requirements>
 
 ---
 
@@ -94,7 +98,7 @@ The actionable directives that **bind this phase**:
 | `react` | `19.2.x` | UI runtime | Ships with Next 15.5. `[VERIFIED: STACK.md]` |
 | `tailwindcss` | `4.3.0` | CSS-first styling via `@theme` | Locked. Score/grade tokens go in `@theme` block. `[VERIFIED: STACK.md]` |
 | `shadcn/ui` | CLI canary (Tailwind v4 + React 19) | Card, Badge, Skeleton, Tooltip, Tabs, Separator, Alert | Locked. Component source is copied into repo. `[CITED: ui.shadcn.com/docs/tailwind-v4]` |
-| `@nestjs/core` `@nestjs/common` | `11.1.24` | Backend modules, controllers, interceptors | Locked. `APP_INTERCEPTOR` token is how we register the ComplianceInterceptor globally. `[VERIFIED: npm view @nestjs/common version → 11.1.24]` |
+| `@nestjs/core` `@nestjs/common` | `11.1.24` | Backend modules, controllers, interceptors | Locked. `@UseInterceptors(ComplianceInterceptor)` is applied on `AiService` (method-level), NOT globally via `APP_INTERCEPTOR` — see Pattern 3. `[VERIFIED: npm view @nestjs/common version → 11.1.24]` |
 | `@nestjs/mongoose` + `mongoose` | `11.0.x` + `9.6.x` | Report doc persistence | Locked. `ReportDoc` is a single denormalised collection. `[CITED: STACK.md]` |
 | `@nestjs/bullmq` + `bullmq` | `11.0.x` + `5.77.x` | `narrative-batch` queue | Locked. Repeatable jobs trigger after `eod-recompute`. `[CITED: STACK.md]` |
 | `@google/genai` | `2.6.0` | Gemini narrative + SWOT generation | Locked. Used **only** inside the `narrative-batch` job, never in a GET handler. `[VERIFIED: npm view @google/genai version → 2.6.0]` |
@@ -107,7 +111,7 @@ The actionable directives that **bind this phase**:
 |---------|---------|---------|-------------|
 | `lightweight-charts-react-components` | `2.1.0` | React wrapper for v5 | **Optional.** Use only if team wants to skip raw imperative integration. Wrapper publisher provenance is MEDIUM per STACK.md → safer to integrate raw in a `'use client'` component with `useEffect` + cleanup. `[VERIFIED: npm view lightweight-charts-react-components version → 2.1.0]` |
 | `ioredis` | matches BullMQ | Cache facade backing report hot cache | Already wired in Phase 1's CacheModule; this phase consumes it. |
-| `zod` (or rely on `class-validator`) | n/a | Runtime validation of Gemini structured-JSON response | Optional — Gemini SDK enforces the `responseSchema`; a `zod` parse on the parsed JSON is belt-and-braces, recommended. `[CITED: ai.google.dev/gemini-api/docs/structured-output]` |
+| `zod` (or rely on `class-validator`) | n/a | Runtime validation of Gemini structured-JSON response | Optional — Gemini SDK enforces `responseJsonSchema`; a `zod` parse on the parsed JSON is belt-and-braces, recommended. `[CITED: ai.google.dev/gemini-api/docs/structured-output]` |
 
 ### Alternatives Considered
 
@@ -252,17 +256,17 @@ Redis: `report:stock:${ticker}` (TTL = until next recompute)
 
 **What:** The `narrative-batch` BullMQ queue runs after `eod-recompute` finishes for an instrument. For each instrument with a changed `dataVersionHash`, it calls `AIService.narrative(scoreInput)`, which:
 1. Builds the prompt with **placeholders**, not raw numbers.
-2. Calls Gemini with `responseSchema` (structured JSON output).
+2. Calls Gemini with `responseJsonSchema` (structured JSON output via `@google/genai` 2.x — note: field name changed from `responseSchema` in older SDKs).
 3. Runs `templateSlots.substitute(narrative, verifiedValues)` to inject digits.
 4. Runs `numericAudit.verify(substituted, verifiedValues)` — any unexpected digit → reject + regenerate (max 3 retries with stricter prompt).
-5. Passes the result to the ComplianceInterceptor (already wrapping the AIModule).
+5. Passes through the ComplianceInterceptor (applied on `AiService` via `@UseInterceptors` — see Pattern 3).
 6. Persists to `StockReportDoc.narrative` and invalidates Redis.
 
 **When to use:** Every narrative + SWOT generation. No exceptions.
 
 ### Pattern 3: ComplianceInterceptor Chokepoint (the compliance invariant enforcer)
 
-**What:** A NestJS `Interceptor` registered globally via `APP_INTERCEPTOR`. Wraps every `Observable` returned from the AIModule facade. Operates in two modes:
+**What:** A NestJS `Interceptor` scoped to the `AiService` (the Gemini facade) via `@UseInterceptors(ComplianceInterceptor)` on the **class**. Every method of `AiService` returns through the interceptor; no global registration. Operates in two modes:
 - **Block mode** (default for v1): if forbidden verbs survive after sanitisation, throw `ComplianceViolationException` → caller (the narrative job) retries with a stricter prompt.
 - **Replace mode** (fallback): if a single isolated forbidden token can be safely substituted (`"recommend" → "analysis suggests"`), do so and log a warning.
 
@@ -270,7 +274,13 @@ Always injects `disclaimers` metadata so the frontend cannot accidentally render
 
 **When to use:** Every AI surface in the system — narrative, SWOT, news sentiment (Phase 6), chat (Phase 7). Phase 4 makes it **active** for the first two.
 
-**Scope decision:** Register globally with `APP_INTERCEPTOR` rather than per-controller — guarantees no AI endpoint can ship without it (per ARCHITECTURE.md anti-pattern #2: "Compliance as a 'remember to call it' service").
+**Scope decision (corrected — do not use global `APP_INTERCEPTOR`):** A globally-registered interceptor would fire on every NestJS response — auth login, watchlist, search, health checks — none of which return `{ text, citedSources }`. The interceptor would crash or silently no-op on those, masking bugs. Instead, achieve **enforce-by-construction** through three layered guards:
+
+1. **Method-level interception on `AiService`:** `@UseInterceptors(ComplianceInterceptor)` on the class. Every method that returns AI output passes through the interceptor.
+2. **Private Gemini client:** `gemini.client.ts` is never exported from `ai.module.ts`; only `AiService` is `@Injectable()`-exposed. No code path can instantiate Gemini directly.
+3. **ESLint guard:** `no-restricted-imports` rule forbids `ai.service` imports outside `jobs/` (narrative-batch) and `chat/` (Phase 7). Verified in CI.
+
+These three guards together produce the same "no AI without compliance" property as a global interceptor, without the cross-controller blast radius.
 
 ### Pattern 4: Streaming Suspense for <2s First-Paint
 
@@ -325,7 +335,7 @@ Each `Suspense`'d child does its own `fetch` to the same NestJS endpoint — Rea
 |---------|-------------|-------------|-----|
 | Interactive financial price chart with OHLC + timeframe switching + crosshair | Custom canvas/SVG chart | **Lightweight Charts v5** (`lightweight-charts@5.2.0`) | 5+ years of edge cases (gap handling, holiday alignment, log/linear axes, performance with thousands of candles). Apache-2.0, 45KB. `[CITED: tradingview.github.io/lightweight-charts]` |
 | Forbidden-verb detection in free text | Hand-rolled `str.includes("buy")` | **Word-boundary regex with case-insensitive flag + negation context awareness** (codified once in `compliance.sanitiser.ts`) | `str.includes` matches "buying opportunity" inside "non-buying opportunity"; word-boundary regex + negative lookbehind for "do not" is the minimum correct approach. `[ASSUMED]` |
-| Structured AI output parsing | Regex over Gemini free-text | **Gemini `responseSchema` (`@google/genai`'s `responseMimeType: 'application/json'` + `responseSchema`)** | Native structured output guarantees parseability; eliminates a class of "what if Gemini wraps it in markdown" bugs. `[CITED: ai.google.dev/gemini-api/docs/structured-output]` |
+| Structured AI output parsing | Regex over Gemini free-text | **Gemini structured output (`@google/genai`'s `responseMimeType: 'application/json'` + `responseJsonSchema`)** | Native structured output guarantees parseability; eliminates a class of "what if Gemini wraps it in markdown" bugs. `[CITED: ai.google.dev/gemini-api/docs/structured-output]` |
 | BullMQ job orchestration | Custom cron + Redis locks | **`@nestjs/bullmq` repeatable jobs + flow producer** | Already locked. Flow producer chains `eod-recompute → narrative-batch` cleanly. `[CITED: STACK.md]` |
 | Cache TTL bookkeeping | Inline `redis.set(..., 'EX', N)` calls everywhere | **Phase 1's CacheModule with centralised TTL policy table** | Already exists. Phase 4 adds report TTL constants only. |
 | Disclaimer rendering | Inline strings in each card | **Single `<DisclaimerFooter />` component** + `disclaimers.constants.ts` server-side | One source of truth, legal review reviews one file. |
@@ -526,7 +536,7 @@ export class AiService {
         config: {
           systemInstruction: NARRATIVE_SYSTEM_PROMPT,
           responseMimeType: 'application/json',
-          responseSchema: NARRATIVE_SCHEMA,
+          responseJsonSchema: NARRATIVE_SCHEMA,   // @google/genai 2.x field name (was responseSchema in older SDKs)
           temperature: 0.2,
         },
       });
@@ -545,7 +555,7 @@ export class AiService {
 }
 ```
 
-`[CITED: ai.google.dev/gemini-api/docs/structured-output for responseSchema usage; @google/genai 2.6.0 API surface]`
+`[CITED: ai.google.dev/gemini-api/docs/structured-output; @google/genai 2.6.0 API uses `responseJsonSchema` (verified against js-genai SDK README + community examples 2026-05-28)]`
 
 ### Example 2: Template-slot substitution
 
@@ -648,16 +658,30 @@ export function sanitiseAndCheck(text: string): { sanitised: string; violations:
 ```typescript
 // apps/api/src/compliance/compliance.module.ts
 import { Module } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ComplianceInterceptor } from './compliance.interceptor';
 
 @Module({
-  providers: [{ provide: APP_INTERCEPTOR, useClass: ComplianceInterceptor }],
+  providers: [ComplianceInterceptor],
+  exports: [ComplianceInterceptor],   // AiModule imports this and applies via @UseInterceptors
 })
 export class ComplianceModule {}
 ```
 
-`[CITED: docs.nestjs.com/interceptors; docs.nestjs.com/fundamentals/lifecycle-events APP_INTERCEPTOR pattern]`
+```typescript
+// apps/api/src/ai/ai.service.ts — interceptor applied at the class
+import { Injectable, UseInterceptors } from '@nestjs/common';
+import { ComplianceInterceptor } from '../compliance/compliance.interceptor';
+
+@Injectable()
+@UseInterceptors(ComplianceInterceptor)  // every method of AiService returns through compliance
+export class AiService {
+  async narrative(input: ScoreInput): Promise<NarrativeResult> { /* ... */ }
+  async swot(input: ScoreInput): Promise<SwotResult> { /* ... */ }
+  async classifySentiment(text: string): Promise<SentimentLabel> { /* ... — Phase 6 */ }
+}
+```
+
+`[CITED: docs.nestjs.com/interceptors — class-scope `@UseInterceptors` on a provider]`
 
 ### Example 5: Lightweight Charts v5 — single instance, timeframe switching
 
@@ -797,7 +821,7 @@ export class NarrativeBatchProcessor extends WorkerHost {
 |--------------|------------------|--------------|--------|
 | `@google/generative-ai` SDK | `@google/genai` 2.x | Old SDK deprecated, frozen at 0.24.1 | Use the new unified SDK exclusively. `[CITED: ai.google.dev migrate guide]` |
 | Lightweight Charts v4 API (`addCandlestickSeries`) | v5 API (`addSeries(CandlestickSeries)`) | v5 release (breaking) | v4 tutorials won't compile; use v5 docs only. `[CITED: tradingview.github.io/lightweight-charts]` |
-| Free-text Gemini prose + post-parse | Structured JSON output via `responseSchema` | Stable in Gemini 2.5 family | Eliminates "model wrapped JSON in markdown" failure modes. `[CITED: ai.google.dev/gemini-api/docs/structured-output]` |
+| Free-text Gemini prose + post-parse | Structured JSON output via `responseJsonSchema` (was `responseSchema` in older SDKs) | Stable in Gemini 2.5 family | Eliminates "model wrapped JSON in markdown" failure modes. `[CITED: ai.google.dev/gemini-api/docs/structured-output]` |
 | Pages Router `getServerSideProps` | App Router RSC + Suspense streaming | Next.js 13+, stable in 15 | Score+verdict can paint before chart data resolves → key for <2s budget. `[CITED: nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming]` |
 | Per-route revalidation hints | `revalidateTag()` (server action / route handler) | Next.js 14+ | Job-triggered invalidation is now first-class. `[CITED: nextjs.org/docs/app/api-reference/functions/revalidateTag]` |
 | `text-embedding-004` | `gemini-embedding-001` @ 768 dims | Jan 14 2026 sunset of 004 | Used by Phase 6, but the dimension choice affects shared infra. `[CITED: STACK.md]` |
@@ -818,7 +842,7 @@ export class NarrativeBatchProcessor extends WorkerHost {
 | A1 | A 150ms debounce on chart timeframe switch is sufficient to absorb rapid clicks. | Common Pitfalls — Pitfall 4 | Minor — tune empirically; UX-only impact. |
 | A2 | Custom SVG gauge (under 100 LOC) is preferable to a chart library for the score gauge. | Don't Hand-Roll | Low — if the custom build proves fiddly, drop in `react-circular-progressbar` (well-maintained, ~6KB). |
 | A3 | Lightweight Charts can comfortably render 2,500 candles (10y daily) without performance issues. | Common Pitfalls — Pitfall 4 | Low — Lightweight Charts is built for 10K+ candles; 2,500 is well within range, but downsampling at MAX is the safe default. |
-| A4 | `responseSchema` in `@google/genai` 2.6 enforces structured JSON output reliably enough that a `zod` parse is belt-and-braces, not required. | Standard Stack — `zod` | Low — adding `zod` is cheap; the assumption only affects code budget, not correctness. |
+| A4 | `responseJsonSchema` in `@google/genai` 2.6 enforces structured JSON output reliably enough that a `zod` parse is belt-and-braces, not required. | Standard Stack — `zod` | Low — adding `zod` is cheap; the assumption only affects code budget, not correctness. |
 | A5 | Forbidden-verb regex with word boundaries + a small phrase blocklist is sufficient for v1 compliance interception. | Code Examples — Example 4 | MEDIUM — a determined model could phrase advice around the blocklist ("the data suggests action X is favourable"). Mitigation: fixture-based tests catch common evasions; legal review of generated samples in QA. |
 | A6 | Numeric-audit tolerance: strict-match on percentage strings, ±0.01 only for floating-point ratios. | Standard Stack — Claude's Discretion | Low — tunable; document the tolerance config in `numeric-audit.ts`. |
 | A7 | Gemini 2.5 Flash is sufficient quality for the one-paragraph narrative; Flash-Lite is sufficient for SWOT bullets. | Standard Stack | Low — easy to upgrade to Pro if quality complaints emerge; pure config change. |
@@ -892,7 +916,7 @@ export class NarrativeBatchProcessor extends WorkerHost {
 | STOCK-03 | `PriceChart` mounts, switches timeframe, calls `setData`, cleans up on unmount | unit (RTL) | `pnpm --filter web test PriceChart.test` | ❌ Wave 0 |
 | STOCK-04 / STOCK-05 | Strip components render all six / four metrics with tooltips | unit | `pnpm --filter web test FundamentalsStrip.test TechnicalsStrip.test` | ❌ Wave 0 |
 | STOCK-06 | `ReportDoc.peers.length === 3` enforced | unit (DTO + integration) | `pnpm --filter api test reports.service.spec` | ❌ Wave 0 |
-| STOCK-08 | Report endpoint p95 latency < 1500ms under k6 load test (100 RPS, warm cache) | perf (manual-on-demand) | `k6 run perf/report-load.js` | ❌ Wave 0 (optional — manual sign-off acceptable) |
+| STOCK-08 | Report endpoint p95 latency < 1500ms under k6 load test (100 RPS, warm cache) | perf (required gate) | `k6 run perf/report-load.js` | ❌ Wave 0 |
 | FUND-01..05 | Fund report parallel to stock | integration + unit | `pnpm --filter api test reports.fund.spec` | ❌ Wave 0 |
 | COMP-02 | Every AI response goes through `ComplianceInterceptor` — verified by spying on `AiService.narrative` and asserting `ComplianceInterceptor.intercept` was called | unit | `pnpm --filter api test compliance.interceptor.spec` | ❌ Wave 0 |
 | COMP-02 (chokepoint) | No file outside `jobs/` and `chat/` imports `ai.service` | static (ESLint) | `pnpm lint` (custom `no-restricted-imports` rule) | ❌ Wave 0 |
@@ -902,7 +926,7 @@ export class NarrativeBatchProcessor extends WorkerHost {
 ### Sampling Rate
 - **Per task commit:** `pnpm --filter <package> test -- --findRelatedTests <changed-files>` (quick — under 10s).
 - **Per wave merge:** `pnpm test` (full suite — under 5min on cold cache).
-- **Phase gate:** Full suite green + manual k6 p95 < 1.5s on `/reports/stock/:ticker` (warm cache, 100 RPS) before `/gsd-verify-work`.
+- **Phase gate (required):** (1) Full Jest+Vitest suite green; (2) `k6 run perf/report-load.js` shows p95 < 1500ms on `/reports/stock/:ticker` (100 RPS, warm cache); (3) ESLint `no-restricted-imports` clean. All three are blockers for `/gsd-verify-work`.
 
 ### Wave 0 Gaps
 - [ ] `apps/api/src/reports/reports.controller.spec.ts` — covers STOCK-01, FUND-01
@@ -916,7 +940,7 @@ export class NarrativeBatchProcessor extends WorkerHost {
 - [ ] `apps/web/src/app/_components/reports/DisclaimerFooter.test.tsx`
 - [ ] `apps/web/vitest.config.ts` + `setup.ts` — if not present from earlier phases
 - [ ] `apps/api/src/.eslintrc.*` custom rule: `no-restricted-imports` for `ai.service` outside `jobs/` and `chat/`
-- [ ] `perf/report-load.js` — k6 script (optional but recommended) for STOCK-08
+- [ ] `perf/report-load.js` — k6 script for STOCK-08 (required phase gate, not optional)
 
 ---
 
@@ -957,11 +981,11 @@ export class NarrativeBatchProcessor extends WorkerHost {
 
 ### Primary (HIGH confidence)
 - `npm` registry live query (2026-05-28) — verified: `@google/genai` 2.6.0, `lightweight-charts` 5.2.0, `lightweight-charts-react-components` 2.1.0, `@nestjs/common` 11.1.24
-- ai.google.dev/gemini-api/docs/structured-output — `responseSchema`, `responseMimeType: 'application/json'`, `@google/genai` Type enum
+- ai.google.dev/gemini-api/docs/structured-output — `responseJsonSchema`, `responseMimeType: 'application/json'`, `@google/genai` `Type` enum (confirmed via js-genai SDK README + community examples 2026-05-28)
 - ai.google.dev/gemini-api/docs/text-generation — system instructions, temperature, model selection (2.5 Flash vs Flash-Lite vs Pro)
 - ai.google.dev/gemini-api/docs/caching — implicit caching min token thresholds (Flash 1024 / Pro 2048); 60min default TTL, no upper bound
 - tradingview.github.io/lightweight-charts — v5 API (createChart, addSeries(CandlestickSeries), setData, remove), official React integration guidance via raw `useEffect`
-- docs.nestjs.com/interceptors — Interceptor implementation + `APP_INTERCEPTOR` global registration
+- docs.nestjs.com/interceptors — Interceptor implementation; both global (`APP_INTERCEPTOR`) and class-scope (`@UseInterceptors` on a provider) patterns. Phase 4 uses **class-scope on `AiService`** (see Pattern 3).
 - docs.nestjs.com/techniques/queues — `@nestjs/bullmq` Processor + WorkerHost
 - nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming — Suspense streaming in App Router
 - nextjs.org/docs/app/api-reference/functions/revalidateTag — tag-based cache invalidation
