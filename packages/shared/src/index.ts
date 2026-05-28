@@ -6,6 +6,7 @@ export * from "./providers";
 export * from "./scoring";
 export * from "./stock-report";
 export * from "./verdict";
+export * from "./watchlist";
 
 /**
  * Sentinel value used by Plan 01 to prove the shared package round-trips
