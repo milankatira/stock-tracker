@@ -10,6 +10,8 @@ import { CacheModule } from "./modules/cache/cache.module";
 import { RedisThrottlerStorage } from "./modules/cache/redis-throttler.storage";
 import type { RedisCacheClient } from "./modules/cache/cache.service";
 import { HealthModule } from "./modules/health/health.module";
+import { AdminScoringModule } from "./admin/scoring/admin-scoring.module";
+import { EodRecomputeModule } from "./jobs/eod-recompute/eod-recompute.module";
 import { MarketDataModule } from "./modules/market-data/market-data.module";
 import { NarrativeModule } from "./modules/narrative/narrative.module";
 import { ReportsModule } from "./modules/reports/reports.module";
@@ -45,9 +47,11 @@ import { AppController } from "./app.controller";
         throttlers: [{ ttl: 60_000, limit: 100 }],
       }),
     }),
+    AdminScoringModule,
     AnalysisModule,
     AuthModule,
     CacheModule,
+    EodRecomputeModule,
     HealthModule,
     MarketDataModule,
     NarrativeModule,
