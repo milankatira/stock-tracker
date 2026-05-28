@@ -9,9 +9,9 @@ Requirements for the initial release. Each maps to a roadmap phase.
 
 ### Foundation & Infrastructure
 
-- [ ] **FOUND-01**: A running Turborepo monorepo hosts a Next.js 15 web app and a NestJS API that can call each other
+- [x] **FOUND-01**: A running Turborepo monorepo hosts a Next.js 15 web app and a NestJS API that can call each other
 - [ ] **FOUND-02**: The API connects to MongoDB Atlas (ap-south-1) and Redis, with health checks passing
-- [ ] **FOUND-03**: Shared TypeScript DTOs/types in `packages/shared` are consumed by both web and API
+- [x] **FOUND-03**: Shared TypeScript DTOs/types in `packages/shared` are consumed by both web and API
 - [ ] **FOUND-04**: Secrets (Gemini key, Mongo URI, OAuth creds) load from environment/secret manager — never hardcoded
 - [ ] **FOUND-05**: A centralised Redis cache facade enforces a TTL on every cache key
 
@@ -140,9 +140,9 @@ Populated during roadmap creation — each requirement maps to exactly one phase
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 1 | Pending |
+| FOUND-01 | Phase 1 | Complete |
 | FOUND-02 | Phase 1 | Pending |
-| FOUND-03 | Phase 1 | Pending |
+| FOUND-03 | Phase 1 | Complete |
 | FOUND-04 | Phase 1 | Pending |
 | FOUND-05 | Phase 1 | Pending |
 | AUTH-01 | Phase 1 | Pending |

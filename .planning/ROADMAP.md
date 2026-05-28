@@ -31,7 +31,7 @@ Phase structure follows the hard dependency graph from research: infrastructure 
   4. A new user's first sign-up records a timestamped DPDP consent artifact.
   5. The verdict type is a typed enum (`STRONG_SCORE | CAUTION | WEAK_SCORE`) with no BUY/SELL/HOLD verbs anywhere, and every Redis cache key carries a TTL.
 **Plans**: 4 plans
-- [ ] 01-01-PLAN.md — Turborepo monorepo + apps scaffold + Wave-0 test infrastructure (FOUND-01, FOUND-03)
+- [x] 01-01-PLAN.md — Turborepo monorepo + apps scaffold + Wave-0 test infrastructure (FOUND-01, FOUND-03)
 - [ ] 01-02-PLAN.md — NestJS API infra: Zod env validation, required-TTL cache facade, split health checks (FOUND-02, FOUND-04, FOUND-05)
 - [ ] 01-03-PLAN.md — Auth (email/password + Google OAuth + JWT rotation) + DPDP consent (AUTH-01..05)
 - [ ] 01-04-PLAN.md — Compliance verdict contract: branded `Verdict` type + `forbid-verbs.sh` CI guard (COMP-01)
