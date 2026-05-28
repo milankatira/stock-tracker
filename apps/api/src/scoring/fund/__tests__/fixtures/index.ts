@@ -1,0 +1,17 @@
+import AXIS_BLUECHIP_DIRECT_GROWTH from "./AXIS_BLUECHIP_DIRECT_GROWTH.json";
+import HDFC_FLEXICAP_DIRECT_GROWTH from "./HDFC_FLEXICAP_DIRECT_GROWTH.json";
+import MIRAE_LARGECAP_DIRECT_GROWTH from "./MIRAE_LARGECAP_DIRECT_GROWTH.json";
+import PARAG_PARIKH_FLEXICAP_DIRECT_GROWTH from "./PARAG_PARIKH_FLEXICAP_DIRECT_GROWTH.json";
+import SBI_SMALLCAP_DIRECT_GROWTH from "./SBI_SMALLCAP_DIRECT_GROWTH.json";
+import type { ScoreFundInput } from "../../types";
+
+export const FUND_FIXTURES: ReadonlyArray<{
+  readonly name: string;
+  readonly input: ScoreFundInput;
+}> = [
+  { name: "HDFC_FLEXICAP_DIRECT_GROWTH", input: HDFC_FLEXICAP_DIRECT_GROWTH as ScoreFundInput },
+  { name: "PARAG_PARIKH_FLEXICAP_DIRECT_GROWTH", input: PARAG_PARIKH_FLEXICAP_DIRECT_GROWTH as ScoreFundInput },
+  { name: "AXIS_BLUECHIP_DIRECT_GROWTH", input: AXIS_BLUECHIP_DIRECT_GROWTH as ScoreFundInput },
+  { name: "MIRAE_LARGECAP_DIRECT_GROWTH", input: MIRAE_LARGECAP_DIRECT_GROWTH as ScoreFundInput },
+  { name: "SBI_SMALLCAP_DIRECT_GROWTH", input: SBI_SMALLCAP_DIRECT_GROWTH as ScoreFundInput },
+];
