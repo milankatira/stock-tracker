@@ -118,8 +118,13 @@ Plans:
   3. The chat refuses out-of-scope or non-compliant queries (insider trading, US stocks, crypto, guaranteed-return claims).
   4. A user can view their past chat conversations.
   5. A user can compare 2–3 stocks side by side and see an AI verdict naming the higher-scoring pick (never "buy").
-**Plans**: TBD
-**Needs phase research**: yes — chat guardrails (prompt-injection defence, out-of-scope refusal, citation grounding, SEBI-safe templating, SSE sanitisation) are MEDIUM confidence. Resolve via `/gsd-research-phase` before planning.
+**Plans**: 4 plans
+Plans:
+- [ ] 07-PLAN-01-spike-tools.md — Wave-0 spike verifying @google/genai 2.6 streaming + function-calling chunk shape; typed read-only TOOL_REGISTRY (7 tools: getInstrumentScore, getInstrumentFundamentals, getInstrumentTechnicals, getFundReturns, getRecentNews, comparePeers, searchInstruments); CI lint blocking any scoring/ import under ai/tools/** (CHAT-02)
+- [ ] 07-PLAN-02-sse-streaming.md — SentenceBuffer FSM (OUT/IN_NUMBER/IN_ABBREV) + forbidden-verbs + RefusalCategory enum + pre-stream RefusalDetector; AIService.chatStream Gemini streaming + function-calling loop with N=5 tool cap + 15s heartbeats + AbortController; NestJS @Sse controller + ChatService + @nestjs/throttler (CHAT-01, CHAT-03 partial, CHAT-04)
+- [ ] 07-PLAN-03-history-ui.md — Citation validator (Indian numeric regex) + ChatSession Mongoose schema + ChatSessionRepo (per-user CRUD with TS-enforced userId) + ChatOwnershipGuard + REST endpoints + idempotent reconnect via messageId; Next.js chat UI (past conversations, thread view, scope picker, citation pills, tool breadcrumbs, refusal banners) using @microsoft/fetch-event-source (CHAT-05, CHAT-03 finalisation)
+- [ ] 07-PLAN-04-comparison.md — STOCK-07 comparison: separate compare.controller.ts/compare.service.ts (no Plan 03 file conflict); AIService.compare one-shot non-streaming generateContent with responseJsonSchema { winnerSymbol, rationale, scoreDelta }; server-side scoreDelta override (Gemini's number discarded — invariant); 422 SCORE_PENDING handling; Next.js compare picker + VerdictCard + ScoreTable (STOCK-07)
+**Needs phase research**: closed — see `.planning/phases/07-ask-finsight-chat-comparison/07-RESEARCH.md`
 **UI hint**: yes
 
 ### Phase 8: Public SEO Pages
@@ -154,7 +159,7 @@ Plans:
 | 4. Reports, AI Narrative & Active Compliance | 0/0 | Not started | - |
 | 5. Search & Watchlist | 0/2 | Planned | - |
 | 6. News Feed & Sentiment | 0/2 | Not started | - |
-| 7. Ask FinSight Chat & Comparison | 0/0 | Not started | - |
+| 7. Ask FinSight Chat & Comparison | 0/4 | Planned | - |
 | 8. Public SEO Pages | 0/0 | Not started | - |
 | 9. Marketing Landing Page | 0/1 | Not started | - |
 
