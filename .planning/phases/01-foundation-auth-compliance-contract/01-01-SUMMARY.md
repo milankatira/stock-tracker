@@ -144,26 +144,26 @@ completed: 2026-05-28
 1. **Task 1: Monorepo skeleton (Turborepo + pnpm workspaces + Docker Compose)** — `453a307` (chore)
 2. **Task 2: Scaffold apps/web + apps/api + packages/shared with shared-type round-trip** — `ae7d679` (feat)
 3. **Task 3: Wave-0 test infrastructure (mongodb-memory-server + ioredis-mock + Google OAuth mock)** — `bcc335f` (chore)
+4. **Plan metadata commit** — `c0acdfb` (docs: SUMMARY + STATE + ROADMAP + REQUIREMENTS)
+5. **Flat ESLint config + web lint script swap** (Rule 3 — Blocking) — `fccda67` (chore)
 
 ## Verification Output
 
 ```text
-$ pnpm turbo run type-check
- Tasks:    4 successful, 4 total
-Cached:    3 cached, 4 total
-
-$ pnpm turbo run build
- Tasks:    3 successful, 3 total
-Cached:    0 cached, 3 total
-  Time:    11.732s
-  // shared/dist/{index.js,index.cjs,index.d.ts}, apps/api/dist/{main,app.module,app.controller}.js, apps/web/.next/* all present
-
-$ pnpm turbo run test
- Tasks:    4 successful, 4 total
-  // @finsight/shared: 7 tests passed (api-errors guard + 6 reject-shape cases)
-  // @finsight/api:    7 tests passed (1 controller spec + 6 Wave-0 infra)
-  // @finsight/web:    passWithNoTests (specs land Plan 03)
+$ pnpm turbo run lint type-check test build
+ Tasks:    12 successful, 12 total
+Cached:    4 cached, 12 total
+  Time:    13.314s
+  // lint:       4/4 (shared, api, web, root)
+  // type-check: 4/4
+  // test:       4/4  (7 shared + 7 api + web passWithNoTests)
+  // build:      3/3  + shared dist + apps/api dist + apps/web/.next present
 ```
+
+Per-task breakdown:
+- `@finsight/shared:test` — 7 tests (isApiError guard: validation, all-kinds, missing-kind, unknown-kind, non-string-message, null/primitives, arrays).
+- `@finsight/api:test` — 7 tests (1 app.controller.spec returning the shared sentinel + 6 wave0-infra.spec proving mongoose connects to MongoMemoryReplSet, can insert/read, ioredis-mock SET/GET/EXPIRE/DEL/PING, Google OAuth mock surface, user factory uniqueness).
+- `@finsight/web:test` — passWithNoTests (specs land Plan 03 + Phase 9).
 
 Locked package versions confirmed via `pnpm list --depth=0 -r`:
 - `next@15.5.4`, `react@19.2.0`, `tailwindcss@4.3.0`
@@ -226,8 +226,18 @@ Locked package versions confirmed via `pnpm list --depth=0 -r`:
 
 ---
 
-**Total deviations:** 5 auto-fixed (2 blocking, 2 bugs, 1 missing critical)
-**Impact on plan:** No scope creep. Deviation 1 just pulled the SWC config from Task 3 forward; Deviations 2+3 were tsc/nest plumbing bugs surfaced by the verification gates (working as designed — that's why the verify exists); Deviation 4 is a Plan-01-only flag; Deviation 5 adds `mongoose` one plan early so the test harness can actually verify what it claims.
+**6. [Rule 3 — Blocking] Flat ESLint config + replaced web's `next lint` with `eslint src`**
+- **Found during:** post-Task-3 plan-level `<verification>` check (orchestrator's final pre-done step).
+- **Issue:** Plan `<verification>` block requires `pnpm turbo run lint type-check test build` to be green. Per-task verifies only ran type-check/test/build. Lint failed everywhere: `shared` + `api` ran `eslint src` with no config (exit 1), `web` ran `next lint` which started an interactive setup prompt (exit 1 + deprecation notice for Next 16).
+- **Fix:** Created a root `eslint.config.mjs` (flat config) with `@eslint/js` + `typescript-eslint` recommended; added `no-explicit-any` error, `no-empty` (no silent catch), unused-vars warn (underscore-prefixed allowed); test files relax the `any` ban + unused-vars. Swapped `apps/web/package.json` `lint` from `next lint` to `eslint src`. Pinned `@eslint/js@^9` (v10 wants eslint@10). Dropped two stale `eslint-disable` directives left over from earlier iterations (rules weren't active so they were reported as unused).
+- **Files modified:** `eslint.config.mjs` (new), `apps/web/package.json`, `apps/api/src/main.ts`, `apps/api/test/setup.ts`, root `package.json` + `pnpm-lock.yaml` (devDep delta).
+- **Verification:** `pnpm turbo run lint type-check test build` — 12/12 green.
+- **Committed in:** `fccda67`.
+
+---
+
+**Total deviations:** 6 auto-fixed (3 blocking, 2 bugs, 1 missing critical)
+**Impact on plan:** No scope creep. Deviation 1 pulled SWC config from Task 3 forward; Deviations 2+3 were tsc/nest plumbing bugs surfaced by the verification gates (working as designed); Deviation 4 is a Plan-01-only flag; Deviation 5 added `mongoose` one plan early so the test harness can actually verify what it claims; Deviation 6 lands the minimal ESLint config the `<verification>` block implicitly required.
 
 ## Issues Encountered
 
