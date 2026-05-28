@@ -1,9 +1,15 @@
 import { Logger } from "@nestjs/common";
 import { Processor, WorkerHost } from "@nestjs/bullmq";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import type { Job } from "bullmq";
 import { formatInTimeZone } from "date-fns-tz";
 import { Types } from "mongoose";
 import { scoreFund, scoreStock } from "../../scoring";
+import { InstrumentsRepository } from "../../modules/market-data/instruments/instruments.repository";
+import {
+  EOD_TICKER_RECOMPUTED_EVENT,
+  type EodTickerRecomputedEvent,
+} from "../narrative-batch/eod-recomputed.event";
 import { EodRecomputeProducer } from "./eod-recompute.producer";
 import {
   EOD_CHILD_JOB_NAME,
@@ -39,6 +45,8 @@ export class EodRecomputeProcessor extends WorkerHost {
     private readonly redis: RedisScoreMaterialiser,
     private readonly version: ScoringEngineVersionProvider,
     private readonly producer: EodRecomputeProducer,
+    private readonly instruments: InstrumentsRepository,
+    private readonly events: EventEmitter2,
   ) {
     super();
   }
@@ -104,6 +112,35 @@ export class EodRecomputeProcessor extends WorkerHost {
         computedAt: computedAt.toISOString(),
         scoringEngineVersion: this.version.current(),
       });
+
+      // Phase 4 hand-off: emit a domain event so the narrative-batch
+      // listener can fan out a precomputed-narrative job. Failures
+      // here MUST NOT block the durable score write, so the lookup +
+      // emit live behind a defensive try/catch.
+      try {
+        const instrument = await this.instruments.findById(
+          payload.instrumentId,
+        );
+        if (instrument) {
+          const event: EodTickerRecomputedEvent = {
+            ticker: instrument.nseSymbol,
+            instrumentId: payload.instrumentId,
+            instrumentType: payload.instrumentType,
+            dataVersionHash: instrument.dataVersionHash,
+            asOfDate: payload.asOfDate,
+          };
+          this.events.emit(EOD_TICKER_RECOMPUTED_EVENT, event);
+        }
+      } catch (emitErr) {
+        this.logger.warn(
+          {
+            instrumentId: payload.instrumentId,
+            message:
+              emitErr instanceof Error ? emitErr.message : "unknown",
+          },
+          "eod_ticker_recomputed_emit_failed",
+        );
+      }
     } catch (err) {
       this.logger.error(
         {

@@ -15,8 +15,8 @@ import {
 } from "./prompts/swot.prompt";
 import {
   NarrativeAuditFailedError,
-  type AiOutput,
   type NarrativeResult,
+  type SwotOutput,
   type SwotResult,
 } from "./ai.types";
 import { GeminiClient } from "./gemini.client";
@@ -114,7 +114,7 @@ export class AiService {
   async swot(
     context: NarrativeContext,
     maxRetries = AiService.MAX_RETRIES,
-  ): Promise<AiOutput> {
+  ): Promise<SwotOutput> {
     const verified = context.verifiedValues;
     let lastError: string | null = null;
 
@@ -136,6 +136,12 @@ export class AiService {
           text,
           citedSources: raw.citedSources,
           touchesReturns: context.touchesReturns,
+          strengths: [...raw.strengths].map((b) => substituteSlots(b, verified)),
+          weaknesses: [...raw.weaknesses].map((b) => substituteSlots(b, verified)),
+          opportunities: [...raw.opportunities].map((b) =>
+            substituteSlots(b, verified),
+          ),
+          threats: [...raw.threats].map((b) => substituteSlots(b, verified)),
         };
       } catch (err) {
         if (err instanceof UnknownPlaceholderError) {

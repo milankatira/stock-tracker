@@ -10,10 +10,12 @@ import { CacheModule } from "./modules/cache/cache.module";
 import { RedisThrottlerStorage } from "./modules/cache/redis-throttler.storage";
 import type { RedisCacheClient } from "./modules/cache/cache.service";
 import { HealthModule } from "./modules/health/health.module";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { AdminScoringModule } from "./admin/scoring/admin-scoring.module";
 import { AiModule } from "./ai/ai.module";
 import { ComplianceModule } from "./compliance/compliance.module";
 import { EodRecomputeModule } from "./jobs/eod-recompute/eod-recompute.module";
+import { NarrativeBatchModule } from "./jobs/narrative-batch/narrative-batch.module";
 import { MarketDataModule } from "./modules/market-data/market-data.module";
 import { NarrativeModule } from "./modules/narrative/narrative.module";
 import { ReportsModule } from "./modules/reports/reports.module";
@@ -56,8 +58,10 @@ import { AppController } from "./app.controller";
     CacheModule,
     ComplianceModule,
     EodRecomputeModule,
+    EventEmitterModule.forRoot(),
     HealthModule,
     MarketDataModule,
+    NarrativeBatchModule,
     NarrativeModule,
     ReportsModule,
     UsersModule,

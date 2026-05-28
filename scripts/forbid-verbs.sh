@@ -58,6 +58,7 @@ EXCLUDE=(
   --glob '!apps/api/src/compliance/compliance.sanitiser.ts'
   --glob '!apps/api/src/compliance/compliance.sanitiser.spec.ts'
   --glob '!apps/api/src/compliance/compliance.interceptor.spec.ts'
+  --glob '!apps/api/src/jobs/narrative-batch/narrative-batch.processor.spec.ts'
 )
 
 # Require ripgrep - the script uses --glob exclusions which grep -r can't
