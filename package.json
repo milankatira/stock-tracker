@@ -24,6 +24,7 @@
       "@nestjs/core",
       "@swc/core",
       "esbuild",
+      "mongodb-memory-server",
       "sharp",
       "unrs-resolver"
     ]
