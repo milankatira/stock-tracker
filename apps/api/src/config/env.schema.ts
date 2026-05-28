@@ -55,6 +55,10 @@ export const envSchema = z.object({
   COOKIE_DOMAIN: z.string().min(1),
   COOKIE_SECRET: z.string().min(32, "COOKIE_SECRET must be at least 32 chars"),
   CSRF_SECRET: z.string().min(32, "CSRF_SECRET must be at least 32 chars"),
+
+  // Phase 2 ingestion — optional supplemental news API key. Adapter is a
+  // graceful no-op when this is absent, so unset (or empty) is valid.
+  NEWSDATA_IO_API_KEY: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
