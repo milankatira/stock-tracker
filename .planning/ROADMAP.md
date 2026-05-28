@@ -79,7 +79,10 @@ Phase structure follows the hard dependency graph from research: infrastructure 
   1. A user can search stocks and funds with autocomplete (name + symbol, current price/NAV) backed by Atlas Search.
   2. A user can add and remove stocks/funds from a personal watchlist.
   3. Watchlist items show a daily-refreshed score sourced from the EOD job.
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 05-PLAN-01-search.md — Atlas Search index (Mongoose Schema.searchIndex) + autocomplete API + cmdk UI (SRCH-01)
+- [ ] 05-PLAN-02-watchlist.md — Watchlist Mongo schema + API + page UI + Redis score join with +/- indicator (WATCH-01, WATCH-02)
 **UI hint**: yes
 
 ### Phase 6: News Feed & Sentiment
@@ -126,7 +129,8 @@ Phase structure follows the hard dependency graph from research: infrastructure 
 **Success Criteria** (what must be TRUE):
   1. A public landing page communicates the value prop, a pricing teaser, and a clear CTA to sign up.
   2. The landing page renders correctly and is fully responsive across mobile and desktop.
-**Plans**: TBD
+**Plans**: 1 plan
+- [ ] 09-01-PLAN.md — Landing page sections + analytics + OG/JSON-LD + copy-compliance Vitest test + Lighthouse + axe-core CI
 **UI hint**: yes
 
 ## Progress
@@ -137,11 +141,11 @@ Phase structure follows the hard dependency graph from research: infrastructure 
 | 2. Data Ingestion & Instrument Master | 0/0 | Not started | - |
 | 3. Scoring Engine & Nightly Recompute | 0/0 | Not started | - |
 | 4. Reports, AI Narrative & Active Compliance | 0/0 | Not started | - |
-| 5. Search & Watchlist | 0/0 | Not started | - |
+| 5. Search & Watchlist | 0/2 | Planned | - |
 | 6. News Feed & Sentiment | 0/0 | Not started | - |
 | 7. Ask FinSight Chat & Comparison | 0/0 | Not started | - |
 | 8. Public SEO Pages | 0/0 | Not started | - |
-| 9. Marketing Landing Page | 0/0 | Not started | - |
+| 9. Marketing Landing Page | 0/1 | Not started | - |
 
 ## Coverage
 
