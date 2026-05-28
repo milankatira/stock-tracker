@@ -17,6 +17,7 @@ import { ComplianceModule } from "./compliance/compliance.module";
 import { EodRecomputeModule } from "./jobs/eod-recompute/eod-recompute.module";
 import { NarrativeBatchModule } from "./jobs/narrative-batch/narrative-batch.module";
 import { PrecomputedReportsModule } from "./reports/reports.module";
+import { SearchModule } from "./search/search.module";
 import { MarketDataModule } from "./modules/market-data/market-data.module";
 import { NarrativeModule } from "./modules/narrative/narrative.module";
 import { ReportsModule } from "./modules/reports/reports.module";
@@ -66,6 +67,7 @@ import { AppController } from "./app.controller";
     NarrativeModule,
     PrecomputedReportsModule,
     ReportsModule,
+    SearchModule,
     UsersModule,
   ],
   controllers: [AppController],
