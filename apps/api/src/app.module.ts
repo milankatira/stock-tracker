@@ -16,6 +16,7 @@ import { AiModule } from "./ai/ai.module";
 import { ComplianceModule } from "./compliance/compliance.module";
 import { EodRecomputeModule } from "./jobs/eod-recompute/eod-recompute.module";
 import { NarrativeBatchModule } from "./jobs/narrative-batch/narrative-batch.module";
+import { PrecomputedReportsModule } from "./reports/reports.module";
 import { MarketDataModule } from "./modules/market-data/market-data.module";
 import { NarrativeModule } from "./modules/narrative/narrative.module";
 import { ReportsModule } from "./modules/reports/reports.module";
@@ -63,6 +64,7 @@ import { AppController } from "./app.controller";
     MarketDataModule,
     NarrativeBatchModule,
     NarrativeModule,
+    PrecomputedReportsModule,
     ReportsModule,
     UsersModule,
   ],
