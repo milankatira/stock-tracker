@@ -1,0 +1,14 @@
+{
+  "year": 2027,
+  "timezone": "Asia/Kolkata",
+  "source": "Provisional 2027 NSE holiday list — refresh in December 2026 when NSE publishes the official calendar.",
+  "holidays": [
+    { "date": "2027-01-26", "name": "Republic Day", "type": "TRADING_HOLIDAY" },
+    { "date": "2027-03-26", "name": "Good Friday", "type": "TRADING_HOLIDAY" },
+    { "date": "2027-04-14", "name": "Ambedkar Jayanti", "type": "TRADING_HOLIDAY" },
+    { "date": "2027-05-01", "name": "Maharashtra Day", "type": "TRADING_HOLIDAY" },
+    { "date": "2027-08-15", "name": "Independence Day", "type": "TRADING_HOLIDAY" },
+    { "date": "2027-10-02", "name": "Mahatma Gandhi Jayanti", "type": "TRADING_HOLIDAY" },
+    { "date": "2027-12-25", "name": "Christmas", "type": "TRADING_HOLIDAY" }
+  ]
+}
