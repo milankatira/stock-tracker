@@ -30,7 +30,11 @@ Phase structure follows the hard dependency graph from research: infrastructure 
   3. A user can sign up and log in with email/password and with Google OAuth, stays logged in across refreshes (JWT session), and can log out from any page.
   4. A new user's first sign-up records a timestamped DPDP consent artifact.
   5. The verdict type is a typed enum (`STRONG_SCORE | CAUTION | WEAK_SCORE`) with no BUY/SELL/HOLD verbs anywhere, and every Redis cache key carries a TTL.
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 01-01-PLAN.md — Turborepo monorepo + apps scaffold + Wave-0 test infrastructure (FOUND-01, FOUND-03)
+- [ ] 01-02-PLAN.md — NestJS API infra: Zod env validation, required-TTL cache facade, split health checks (FOUND-02, FOUND-04, FOUND-05)
+- [ ] 01-03-PLAN.md — Auth (email/password + Google OAuth + JWT rotation) + DPDP consent (AUTH-01..05)
+- [ ] 01-04-PLAN.md — Compliance verdict contract: branded `Verdict` type + `forbid-verbs.sh` CI guard (COMP-01)
 **UI hint**: yes
 
 ### Phase 2: Data Ingestion & Instrument Master
@@ -144,7 +148,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation, Auth & Compliance Contract | 0/0 | Not started | - |
+| 1. Foundation, Auth & Compliance Contract | 0/4 | Planned | - |
 | 2. Data Ingestion & Instrument Master | 0/0 | Not started | - |
 | 3. Scoring Engine & Nightly Recompute | 0/3 | Planned | - |
 | 4. Reports, AI Narrative & Active Compliance | 0/0 | Not started | - |
