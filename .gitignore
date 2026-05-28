@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.turbo/
+.next/
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+
+# Env files (NEVER commit real secrets — .env.example is the only env file in git)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# Mongo memory server cache (binaries)
+.cache/
+
+# Misc
+*.tmp
