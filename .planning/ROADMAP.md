@@ -141,7 +141,11 @@ Plans:
   1. Each stock has a public server-rendered page (`/stock/[ticker]`) and each fund (`/fund/[schemeCode]`) with full HTML content visible in view-source.
   2. Public pages emit JSON-LD structured data, canonical URLs, and OG/Twitter cards.
   3. Public pages read from the materialised store (no live Gemini call on page load) and carry the analysis-not-advice + past-performance disclaimers.
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 08-PLAN-01-public-pages.md — RSC pages /stock/[ticker] + /fund/[schemeCode] with generateStaticParams (NIFTY 500 + top funds) + dynamicParams=true + revalidate=86400; generateMetadata (canonical NSE-preferred, OG, Twitter, robots:{index:false} on stubs); inline JSON-LD (Corporation/FinancialProduct + Article + BreadcrumbList — NO Review/Rating); Disclaimers SC; three-layer Gemini ban (ESLint no-restricted-imports + CI grep + Vitest mock-throw); long-tail stub UX with ad-hoc compute enqueue (SEO-01, SEO-02, SEO-03 page-level, SEO-04)
+- [ ] 08-PLAN-02-sitemap-og-webhook.md — sitemap.ts (with generateSitemaps for 50k cap) + robots.ts; opengraph-image.tsx per ticker + per fund (next/og ImageResponse, Edge runtime) + static brand fallback; HMAC SHA-256 + timingSafeEqual /api/revalidate Route Handler (TDD); cross-phase wiring of RevalidateWebhookClient into Phase 3 eod-recompute + Phase 4 narrative-batch jobs (SEO-03 finalisation)
+**Needs phase research**: closed — see `.planning/phases/08-public-seo-pages/08-RESEARCH.md`
 **UI hint**: yes
 
 ### Phase 9: Marketing Landing Page
@@ -166,7 +170,7 @@ Plans:
 | 5. Search & Watchlist | 0/2 | Planned | - |
 | 6. News Feed & Sentiment | 0/2 | Not started | - |
 | 7. Ask FinSight Chat & Comparison | 0/4 | Planned | - |
-| 8. Public SEO Pages | 0/0 | Not started | - |
+| 8. Public SEO Pages | 0/2 | Planned | - |
 | 9. Marketing Landing Page | 0/1 | Not started | - |
 
 ## Coverage
