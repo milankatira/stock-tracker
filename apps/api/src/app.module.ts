@@ -18,6 +18,7 @@ import { EodRecomputeModule } from "./jobs/eod-recompute/eod-recompute.module";
 import { NarrativeBatchModule } from "./jobs/narrative-batch/narrative-batch.module";
 import { PrecomputedReportsModule } from "./reports/reports.module";
 import { SearchModule } from "./search/search.module";
+import { WatchlistModule } from "./watchlist/watchlist.module";
 import { MarketDataModule } from "./modules/market-data/market-data.module";
 import { NarrativeModule } from "./modules/narrative/narrative.module";
 import { ReportsModule } from "./modules/reports/reports.module";
@@ -69,6 +70,7 @@ import { AppController } from "./app.controller";
     ReportsModule,
     SearchModule,
     UsersModule,
+    WatchlistModule,
   ],
   controllers: [AppController],
 })
