@@ -1,5 +1,6 @@
 export * from "./api-errors";
 export * from "./fund-report";
+export * from "./instrument-match";
 export * from "./instruments";
 export * from "./providers";
 export * from "./scoring";
