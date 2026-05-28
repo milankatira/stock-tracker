@@ -55,8 +55,12 @@ Phase structure follows the hard dependency graph from research: infrastructure 
   3. Each score exposes its full pillar/sub-factor breakdown for explainability ("why is this a 7?").
   4. A nightly BullMQ job recomputes scores for all tracked instruments (fan-out, idempotent) and writes time-stamped score history.
   5. The same instrument produces an identical score given identical inputs (determinism snapshot tests pass).
-**Plans**: TBD
-**Needs phase research**: yes — pillar sub-formulas (metric selection, normalisation, peer selection, NAV timing) are underspecified in the PRD. Resolve via `/gsd-research-phase` before TDD.
+**Plans**: 3 plans
+Plans:
+- [ ] 03-01-PLAN.md — Pure stock scoring engine (scoreStock + 6 pillars + TDD: Vitest snapshots over 10 fixtures + fast-check properties + CI matrix Node 20/22)
+- [ ] 03-02-PLAN.md — Pure fund scoring engine (scoreFund + 6 pillars + returns/Sharpe/Sortino math + TDD over 5 direct/growth fixtures)
+- [ ] 03-03-PLAN.md — Score-history time-series collection + BullMQ EOD recompute (upsertJobScheduler + addBulk fan-out + jobId idempotency) + Redis score:latest/prev materialisation + admin recompute endpoint
+**Needs phase research**: completed — see 03-RESEARCH.md (pillar sub-formulas locked with 12 [ASSUMED] items pending optional /gsd-discuss-phase confirmation).
 
 ### Phase 4: Reports, AI Narrative & Active Compliance
 **Goal**: Users can view full stock and mutual-fund reports — score, verdict, six insight cards, charts, strips, peers, precomputed AI narrative — rendered fast from materialised data, with the compliance interceptor actively sanitising every AI surface.
@@ -142,7 +146,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation, Auth & Compliance Contract | 0/0 | Not started | - |
 | 2. Data Ingestion & Instrument Master | 0/0 | Not started | - |
-| 3. Scoring Engine & Nightly Recompute | 0/0 | Not started | - |
+| 3. Scoring Engine & Nightly Recompute | 0/3 | Planned | - |
 | 4. Reports, AI Narrative & Active Compliance | 0/0 | Not started | - |
 | 5. Search & Watchlist | 0/2 | Planned | - |
 | 6. News Feed & Sentiment | 0/2 | Not started | - |
