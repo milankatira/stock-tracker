@@ -89,4 +89,51 @@ export default tseslint.config(
       ],
     },
   },
+
+  // Phase 4 architecture fence (COMP-02) — AiService is the single
+  // compliance chokepoint. Only the BullMQ jobs layer + the chat
+  // controller may import it; every other module must go through the
+  // narrative-batch processor (Plan 04-02) or the report read path.
+  // @google/genai is fenced to the ai module to prevent bypassing
+  // ComplianceInterceptor via a direct SDK call.
+  //
+  // Transitional carve-out: apps/api/src/modules/narrative/** is the
+  // pre-Phase-4 Gemini wrapper consumed by the existing analysis +
+  // saved-report-history flow. Plan 04-02 migrates that consumer onto
+  // AiService; until then it keeps direct @google/genai access.
+  {
+    files: ["apps/api/src/**/*.ts"],
+    ignores: [
+      "apps/api/src/ai/**",
+      "apps/api/src/jobs/**",
+      "apps/api/src/chat/**",
+      "apps/api/src/modules/narrative/**",
+      "**/*.spec.ts",
+      "**/*.test.ts",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "**/ai/ai.service",
+                "**/ai/ai.service.ts",
+                "**/ai/gemini.client",
+                "**/ai/gemini.client.ts",
+              ],
+              message:
+                "AiService and GeminiClient may only be imported from apps/api/src/jobs/** or apps/api/src/chat/** (COMP-02 chokepoint).",
+            },
+            {
+              group: ["@google/genai", "@google/genai/*"],
+              message:
+                "@google/genai is fenced to apps/api/src/ai/** — go through AiService to inherit ComplianceInterceptor.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 );
