@@ -94,7 +94,10 @@ Plans:
   2. Each news item shows an AI sentiment tag (Positive / Negative / Neutral) that passed the compliance interceptor.
   3. News article embeddings (gemini-embedding-001 @ 768 dims) are indexed in Atlas Vector Search for semantic retrieval.
   4. The aggregated news sentiment score feeds the Sentiment pillar of the stock scoring engine (replacing the neutral fallback).
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 06-01-PLAN.md — News ingestion pipeline: RSS + NewsData.io adapters, dedup, ticker-tagger (with Adani over-attribution fix), News schema, Atlas Vector Search index + boot dim-assertion, BullMQ news-poll job, GET /stocks/:ticker/news (NEWS-01)
+- [ ] 06-02-PLAN.md — Embeddings (gemini-embedding-001 @ 768) + Atlas $vectorSearch + Gemini sentiment classification via AIModule + ComplianceInterceptor + pure aggregator (TDD) + sentiment-pillar wire-up to ScoringModule + frontend news feed on stock report (NEWS-02, NEWS-03, NEWS-04)
 **UI hint**: yes
 
 ### Phase 7: Ask FinSight Chat & Comparison
@@ -142,7 +145,7 @@ Plans:
 | 3. Scoring Engine & Nightly Recompute | 0/0 | Not started | - |
 | 4. Reports, AI Narrative & Active Compliance | 0/0 | Not started | - |
 | 5. Search & Watchlist | 0/2 | Planned | - |
-| 6. News Feed & Sentiment | 0/0 | Not started | - |
+| 6. News Feed & Sentiment | 0/2 | Not started | - |
 | 7. Ask FinSight Chat & Comparison | 0/0 | Not started | - |
 | 8. Public SEO Pages | 0/0 | Not started | - |
 | 9. Marketing Landing Page | 0/1 | Not started | - |
