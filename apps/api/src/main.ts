@@ -14,8 +14,8 @@ async function bootstrap(): Promise<void> {
 
 bootstrap().catch((err: unknown) => {
   // Top-level boot failure — log and exit non-zero so the orchestrator
-  // (k8s, Cloud Run, dev nodemon) restarts/surfaces the error.
-  // eslint-disable-next-line no-console
+  // (k8s, Cloud Run, dev nodemon) restarts/surfaces the error. Plan 02
+  // wires the Nest Logger; until then we have nowhere structured to log.
   console.error("[bootstrap] fatal:", err);
   process.exit(1);
 });

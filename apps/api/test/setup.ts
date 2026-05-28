@@ -24,11 +24,10 @@ import RedisMock from "ioredis-mock";
 type RedisMockInstance = InstanceType<typeof RedisMock>;
 
 declare global {
-  // eslint-disable-next-line no-var
+  // `var` is required in `declare global` blocks so the property attaches
+  // to globalThis; `let`/`const` would create a module-scoped binding.
   var __MONGO__: MongoMemoryReplSet | undefined;
-  // eslint-disable-next-line no-var
   var __MONGO_URI__: string | undefined;
-  // eslint-disable-next-line no-var
   var __REDIS_MOCK__: RedisMockInstance | undefined;
 }
 
