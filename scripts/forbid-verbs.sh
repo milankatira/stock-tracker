@@ -50,6 +50,14 @@ EXCLUDE=(
   --glob '!**/REQUIREMENTS.md'
   --glob '!**/ROADMAP.md'
   --glob '!.planning/**'
+  # Phase 4 compliance machinery — sanitiser fixtures + Gemini system prompts
+  # legitimately contain the forbidden vocabulary as the very thing they
+  # reject. Each file is an allowlisted compliance-machinery artifact.
+  --glob '!apps/api/src/ai/prompts/**'
+  --glob '!apps/api/src/compliance/compliance.fixtures.ts'
+  --glob '!apps/api/src/compliance/compliance.sanitiser.ts'
+  --glob '!apps/api/src/compliance/compliance.sanitiser.spec.ts'
+  --glob '!apps/api/src/compliance/compliance.interceptor.spec.ts'
 )
 
 # Require ripgrep - the script uses --glob exclusions which grep -r can't
