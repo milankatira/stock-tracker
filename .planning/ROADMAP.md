@@ -47,7 +47,11 @@ Phase structure follows the hard dependency graph from research: infrastructure 
   3. When a primary source is killed in staging, the fallback chain + circuit breaker serves stale-but-labeled data instead of failing or blanking.
   4. A malformed external payload is rejected at ingestion (schema validation) rather than persisted as garbage.
   5. Price history is stored split/corporate-action adjusted using a market-holiday calendar — a known recent split shows no fake price gap.
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 02-01-PLAN.md — Provider ports (`PriceProvider`/`FundProvider`/`NewsProvider`) + Yahoo + NSE stock adapters + Wave-0 test infra (Jest + mongodb-memory-server + nock + ESLint architecture fence) (DATA-02 stocks, DATA-04 stocks)
+- [ ] 02-02-PLAN.md — MF NAV adapters (MFAPI.in primary + AMFI NAVAll.txt fallback parser) + News adapters (MoneyControl/ET RSS + NewsData.io supplement) (DATA-02 MF + news, DATA-04 MF + news)
+- [ ] 02-03-PLAN.md — Canonical Instrument + Fund schemas (`popularity` cross-phase contract) + monthly seed job + MongoDB time-series `price_history` + `nav_history` + corporate-action adjustment service + NSE holiday calendar (2026 + 2027 incl. Muhurat session) + per-provider-per-method `opossum 9` circuit breakers + TTL-enforced stale-cache + three fallback chain services + `TickerTaggerService` + final DI rebinding (DATA-01, DATA-03, DATA-05)
 
 ### Phase 3: Scoring Engine & Nightly Recompute
 **Goal**: The core IP — a pure, deterministic, explainable scoring engine for stocks and funds — produces reproducible 1–10 scores and persists time-stamped history via a nightly batch job.
@@ -164,7 +168,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation, Auth & Compliance Contract | 0/4 | Planned | - |
-| 2. Data Ingestion & Instrument Master | 0/0 | Not started | - |
+| 2. Data Ingestion & Instrument Master | 0/3 | Planned | - |
 | 3. Scoring Engine & Nightly Recompute | 0/3 | Planned | - |
 | 4. Reports, AI Narrative & Active Compliance | 0/5 | Not started | - |
 | 5. Search & Watchlist | 0/2 | Planned | - |
