@@ -1,0 +1,26 @@
+{
+  "corporate_actions": {
+    "data": [
+      {
+        "symbol": "RELIANCE",
+        "exdate": "20-Sep-2024",
+        "purpose": "Face Value Split (Sub-Division) - From Rs. 10 to Rs. 2"
+      },
+      {
+        "symbol": "RELIANCE",
+        "exdate": "20-Oct-2017",
+        "purpose": "Bonus 1:1"
+      },
+      {
+        "symbol": "RELIANCE",
+        "exdate": "20-Aug-2024",
+        "purpose": "Interim Dividend - Rs. 8 Per Share"
+      },
+      {
+        "symbol": "RELIANCE",
+        "exdate": "01-Jan-2010",
+        "purpose": "Final Dividend - Rs. 5 Per Share"
+      }
+    ]
+  }
+}

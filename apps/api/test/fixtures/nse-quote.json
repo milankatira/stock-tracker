@@ -1,0 +1,19 @@
+{
+  "info": {
+    "symbol": "RELIANCE",
+    "companyName": "Reliance Industries Limited"
+  },
+  "priceInfo": {
+    "lastPrice": 2548.7,
+    "change": 12.4,
+    "pChange": 0.49,
+    "previousClose": 2536.3
+  },
+  "metadata": {
+    "symbol": "RELIANCE",
+    "lastUpdateTime": "23-May-2026 15:30:00",
+    "isin": "INE002A01018",
+    "listingDate": "29-Nov-1995",
+    "industry": "Refineries"
+  }
+}
