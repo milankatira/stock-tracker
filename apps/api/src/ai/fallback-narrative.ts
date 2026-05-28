@@ -20,11 +20,16 @@ const VERDICT_COPY: Readonly<Record<Verdict, string>> = {
  */
 export const FALLBACK_TEMPLATE = "FinSight Score: {{score}}. Verdict: {{verdict}}.";
 
+export type AssetClass = "stock" | "fund";
+
 export function buildFallbackNarrative(
   score: number,
   verdict: Verdict,
+  assetClass: AssetClass = "stock",
 ): AiOutput {
-  const text = `FinSight Score: ${score}. Verdict: ${VERDICT_COPY[verdict]}.`;
+  const prefix =
+    assetClass === "fund" ? "FinSight Fund Score" : "FinSight Score";
+  const text = `${prefix}: ${score}. Verdict: ${VERDICT_COPY[verdict]}.`;
   return {
     text,
     citedSources: ["score"],

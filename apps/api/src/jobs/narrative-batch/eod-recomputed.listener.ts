@@ -22,6 +22,9 @@ export class EodRecomputedListener {
   async onEodTickerRecomputed(
     event: EodTickerRecomputedEvent,
   ): Promise<void> {
+    // Fund events are handled by `FundEodRecomputedListener`; keep this
+    // listener focused on stock instruments only.
+    if (event.instrumentType !== "STOCK") return;
     try {
       const jobId = await this.queue.enqueueForTicker(
         event.ticker,

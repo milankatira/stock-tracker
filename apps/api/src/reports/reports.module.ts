@@ -4,11 +4,18 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { AuthModule } from "../modules/auth/auth.module";
 import { CacheModule } from "../modules/cache/cache.module";
 import { MarketDataModule } from "../modules/market-data/market-data.module";
+import { FundPeerSetService } from "./fund-peer-set.service";
+import { FundReportsController } from "./fund-reports.controller";
+import { FundReportsService } from "./fund-reports.service";
 import { PeerSetService } from "./peer-set.service";
 import { PricesController } from "./prices.controller";
 import { PricesService } from "./prices.service";
 import { ReportsService } from "./reports.service";
 import { StockReportsController } from "./stock-reports.controller";
+import {
+  FundReportDocEntity,
+  FundReportDocSchema,
+} from "./schemas/fund-report-doc.schema";
 import {
   StockReportDocEntity,
   StockReportDocSchema,
@@ -32,10 +39,23 @@ import {
     MarketDataModule,
     MongooseModule.forFeature([
       { name: StockReportDocEntity.name, schema: StockReportDocSchema },
+      { name: FundReportDocEntity.name, schema: FundReportDocSchema },
     ]),
   ],
-  controllers: [StockReportsController, PricesController],
-  providers: [ReportsService, PricesService, PeerSetService],
-  exports: [ReportsService, PricesService, PeerSetService],
+  controllers: [StockReportsController, PricesController, FundReportsController],
+  providers: [
+    ReportsService,
+    PricesService,
+    PeerSetService,
+    FundReportsService,
+    FundPeerSetService,
+  ],
+  exports: [
+    ReportsService,
+    PricesService,
+    PeerSetService,
+    FundReportsService,
+    FundPeerSetService,
+  ],
 })
 export class PrecomputedReportsModule {}
