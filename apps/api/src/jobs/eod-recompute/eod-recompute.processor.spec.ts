@@ -72,6 +72,8 @@ interface ProcessorDeps {
   redis: RedisScoreMaterialiser;
   version: ScoringEngineVersionProvider;
   producer: EodRecomputeProducer;
+  instruments: import("../../modules/market-data/instruments/instruments.repository").InstrumentsRepository;
+  events: import("@nestjs/event-emitter").EventEmitter2;
 }
 
 function makeDeps(overrides: Partial<ProcessorDeps> = {}): ProcessorDeps {
@@ -94,6 +96,12 @@ function makeDeps(overrides: Partial<ProcessorDeps> = {}): ProcessorDeps {
     producer: {
       fanOut: vi.fn().mockResolvedValue({ enqueued: 10, chunks: 1 }),
     } as unknown as EodRecomputeProducer,
+    instruments: {
+      findById: vi.fn().mockResolvedValue(null),
+    } as unknown as ProcessorDeps["instruments"],
+    events: {
+      emit: vi.fn(),
+    } as unknown as ProcessorDeps["events"],
     ...overrides,
   };
 }
@@ -112,6 +120,8 @@ describe("EodRecomputeProcessor — child job", () => {
       deps.redis,
       deps.version,
       deps.producer,
+      deps.instruments,
+      deps.events,
     );
   });
 

@@ -26,6 +26,8 @@ export interface CompliantAiOutput {
     readonly analysis: string;
     readonly pastPerformance?: string;
   };
+  /** Implementation-defined extra fields (e.g. SWOT quadrants) are preserved verbatim by the interceptor. */
+  readonly [extraField: string]: unknown;
 }
 
 export class ComplianceViolationException extends BadRequestException {
@@ -60,7 +62,11 @@ export class ComplianceInterceptor implements NestInterceptor {
         if (violations.length > 0) {
           throw new ComplianceViolationException(violations);
         }
+        // Preserve every extra field the caller emitted (e.g. SWOT
+        // quadrants on `SwotOutput`) — the interceptor's contract is
+        // "augment with disclaimers", not "narrow to text+citedSources".
         const output: CompliantAiOutput = {
+          ...(value as unknown as Record<string, unknown>),
           text: value.text,
           citedSources: value.citedSources ?? [],
           disclaimers: {
