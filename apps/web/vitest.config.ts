@@ -16,13 +16,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
+    setupFiles: ["./test/setup.ts"],
     include: [
       "src/**/*.spec.{ts,tsx}",
       "src/**/*.test.{ts,tsx}",
     ],
     exclude: ["node_modules", ".next", "dist"],
-    // Plan 01 ships no web specs yet — landing/auth UI specs land in
-    // Plan 03 and Phase 9. Don't fail the green-board until then.
     passWithNoTests: true,
   },
 });
