@@ -1,4 +1,5 @@
 export * from "./api-errors";
+export * from "./verdict";
 
 /**
  * Sentinel value used by Plan 01 to prove the shared package round-trips
