@@ -40,5 +40,6 @@ export default defineConfig({
     exclude: ["test/**/*.e2e-spec.ts", "node_modules", "dist"],
     testTimeout: 30_000,
     hookTimeout: 60_000,
+    snapshotSerializers: ["./src/scoring/__test-utils__/decimal-serializer.ts"],
   },
 });
