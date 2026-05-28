@@ -29,6 +29,9 @@
       "mongodb-memory-server",
       "sharp",
       "unrs-resolver"
-    ]
+    ],
+    "overrides": {
+      "@types/express": "^5.0.6"
+    }
   }
 }

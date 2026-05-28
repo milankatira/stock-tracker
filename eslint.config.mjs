@@ -50,4 +50,43 @@ export default tseslint.config(
       "no-empty": "off",
     },
   },
+
+  // Phase 2 architecture fence — provider SDKs (yahoo-finance2,
+  // stock-nse-india, rss-parser) may only be imported from the
+  // market-data module. Scoring / reports / analysis / narrative code
+  // must consume them via the PriceProvider / FundProvider / NewsProvider
+  // ports in @finsight/shared so the SDK choice can change without
+  // rippling through the domain.
+  {
+    files: ["apps/api/src/**/*.ts"],
+    ignores: [
+      "apps/api/src/modules/market-data/**",
+      "**/*.spec.ts",
+      "**/*.test.ts",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["yahoo-finance2", "yahoo-finance2/*"],
+              message:
+                "Use the PriceProvider port from @finsight/shared — yahoo-finance2 is fenced to market-data.",
+            },
+            {
+              group: ["stock-nse-india", "stock-nse-india/*"],
+              message:
+                "Use the PriceProvider / CORPORATE_ACTIONS_PROVIDER from @finsight/shared — stock-nse-india is fenced to market-data.",
+            },
+            {
+              group: ["rss-parser", "rss-parser/*"],
+              message:
+                "Use the NewsProvider port from @finsight/shared — rss-parser is fenced to market-data.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 );
