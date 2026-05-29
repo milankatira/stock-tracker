@@ -21,6 +21,7 @@ import { SearchModule } from "./search/search.module";
 import { WatchlistModule } from "./watchlist/watchlist.module";
 import { MarketDataModule } from "./modules/market-data/market-data.module";
 import { NarrativeModule } from "./modules/narrative/narrative.module";
+import { NewsModule } from "./news/news.module";
 import { ReportsModule } from "./modules/reports/reports.module";
 import { UsersModule } from "./modules/users/users.module";
 import { AppController } from "./app.controller";
@@ -66,6 +67,7 @@ import { AppController } from "./app.controller";
     MarketDataModule,
     NarrativeBatchModule,
     NarrativeModule,
+    NewsModule,
     PrecomputedReportsModule,
     ReportsModule,
     SearchModule,
