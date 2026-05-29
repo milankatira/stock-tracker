@@ -1,0 +1,17 @@
+{
+  "name": "news_embedding_idx",
+  "type": "vectorSearch",
+  "definition": {
+    "fields": [
+      {
+        "type": "vector",
+        "path": "embedding",
+        "numDimensions": 768,
+        "similarity": "cosine"
+      },
+      { "type": "filter", "path": "instrumentMentions" },
+      { "type": "filter", "path": "publishedAt" },
+      { "type": "filter", "path": "source" }
+    ]
+  }
+}
