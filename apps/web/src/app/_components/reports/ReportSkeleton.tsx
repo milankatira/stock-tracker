@@ -41,6 +41,17 @@ export function PeersShell() {
   );
 }
 
+export function NewsShell() {
+  return (
+    <section className="space-y-3">
+      <Skeleton className="h-7 w-40" />
+      {Array.from({ length: 3 }, (_, i) => (
+        <Skeleton key={i} className="h-12 w-full" />
+      ))}
+    </section>
+  );
+}
+
 export function ReportPageSkeleton() {
   return (
     <article className="container mx-auto max-w-5xl space-y-8 px-4 py-8">

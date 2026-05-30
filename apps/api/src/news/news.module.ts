@@ -5,12 +5,15 @@ import { Inject } from "@nestjs/common";
 import type { Connection } from "mongoose";
 import { AuthModule } from "../modules/auth/auth.module";
 import { MarketDataModule } from "../modules/market-data/market-data.module";
+import { AiModule } from "../ai/ai.module";
 import { News, NewsSchema } from "./news.schema";
 import { NewsController } from "./news.controller";
 import { NewsRepository } from "./news.repository";
 import { NewsService } from "./news.service";
 import { NewsPollProcessor } from "./jobs/news-poll.processor";
+import { EmbedClassifyProcessor } from "../jobs/news-embed-classify/embed-classify.processor";
 import { NEWS_POLL_QUEUE_NAME } from "./jobs/news-poll.queue";
+import { NEWS_EMBED_CLASSIFY_QUEUE_NAME } from "../jobs/news-embed-classify/embed-classify.queue";
 import { assertNewsVectorIndex } from "./vector/vector-index.assert";
 import { probeFeeds } from "./ingest/feed-probe";
 import { FEED_REGISTRY } from "./ingest/feed-registry";
@@ -19,11 +22,20 @@ import { FEED_REGISTRY } from "./ingest/feed-registry";
   imports: [
     AuthModule,
     MarketDataModule,
+    AiModule,
     MongooseModule.forFeature([{ name: News.name, schema: NewsSchema }]),
-    BullModule.registerQueue({ name: NEWS_POLL_QUEUE_NAME }),
+    BullModule.registerQueue(
+      { name: NEWS_POLL_QUEUE_NAME },
+      { name: NEWS_EMBED_CLASSIFY_QUEUE_NAME },
+    ),
   ],
   controllers: [NewsController],
-  providers: [NewsRepository, NewsService, NewsPollProcessor],
+  providers: [
+    NewsRepository,
+    NewsService,
+    NewsPollProcessor,
+    EmbedClassifyProcessor,
+  ],
   exports: [NewsService, NewsRepository],
 })
 export class NewsModule implements OnApplicationBootstrap {

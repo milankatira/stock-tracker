@@ -114,8 +114,8 @@ Plans:
   4. The aggregated news sentiment score feeds the Sentiment pillar of the stock scoring engine (replacing the neutral fallback).
 **Plans**: 2 plans
 Plans:
-- [ ] 06-01-PLAN.md — News ingestion pipeline: RSS + NewsData.io adapters, dedup, ticker-tagger (with Adani over-attribution fix), News schema, Atlas Vector Search index + boot dim-assertion, BullMQ news-poll job, GET /stocks/:ticker/news (NEWS-01)
-- [ ] 06-02-PLAN.md — Embeddings (gemini-embedding-001 @ 768) + Atlas $vectorSearch + Gemini sentiment classification via AIModule + ComplianceInterceptor + pure aggregator (TDD) + sentiment-pillar wire-up to ScoringModule + frontend news feed on stock report (NEWS-02, NEWS-03, NEWS-04)
+- [x] 06-01-PLAN.md — News ingestion pipeline: RSS + NewsData.io adapters, dedup, ticker-tagger (with Adani over-attribution fix), News schema, Atlas Vector Search index + boot dim-assertion, BullMQ news-poll job, GET /stocks/:ticker/news (NEWS-01)
+- [x] 06-02-PLAN.md — Embeddings (gemini-embedding-001 @ 768) + Atlas $vectorSearch + Gemini sentiment classification via AIModule + ComplianceInterceptor + pure aggregator (TDD) + sentiment-pillar wire-up to ScoringModule + frontend news feed on stock report (NEWS-02, NEWS-03, NEWS-04)
 **UI hint**: yes
 
 ### Phase 7: Ask FinSight Chat & Comparison
