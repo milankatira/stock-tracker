@@ -5,6 +5,12 @@ import {
 } from "./ai.service";
 import { NarrativeAuditFailedError } from "./ai.types";
 import type { GeminiClient } from "./gemini.client";
+import type { ToolRegistry } from "./tools/tools.registry";
+
+const STUB_TOOLS: ToolRegistry = {
+  declarations: [],
+  execute: () => Promise.reject(new Error("unused")),
+};
 
 function makeGemini(responses: readonly string[]): GeminiClient {
   let index = 0;
@@ -40,7 +46,7 @@ describe("AiService.narrative — happy path", () => {
         citedSources: ["scoreInput.financials.roe", "scoreInput.financials.pe"],
       }),
     ]);
-    service = new AiService(gemini);
+    service = new AiService(gemini, STUB_TOOLS);
   });
 
   it("substitutes verified placeholders into the paragraph", async () => {
@@ -68,7 +74,7 @@ describe("AiService.narrative — retry loop", () => {
         citedSources: ["scoreInput.financials.roe"],
       }),
     ]);
-    const service = new AiService(gemini);
+    const service = new AiService(gemini, STUB_TOOLS);
 
     const result = await service.narrative(context, 3);
     expect(result.text).toBe("ROE held at 13.7%.");
@@ -87,7 +93,7 @@ describe("AiService.narrative — retry loop", () => {
         citedSources: ["scoreInput.financials.roe"],
       }),
     ]);
-    const service = new AiService(gemini);
+    const service = new AiService(gemini, STUB_TOOLS);
 
     const result = await service.narrative(context, 3);
     expect(result.text).toBe("ROE held at 13.7%.");
@@ -111,7 +117,7 @@ describe("AiService.narrative — retry loop", () => {
         citedSources: [],
       }),
     ]);
-    const service = new AiService(gemini);
+    const service = new AiService(gemini, STUB_TOOLS);
 
     await expect(service.narrative(context, 3)).rejects.toBeInstanceOf(
       NarrativeAuditFailedError,
@@ -126,7 +132,7 @@ describe("AiService.narrative — retry loop", () => {
         },
       },
     } as unknown as GeminiClient;
-    const service = new AiService(gemini);
+    const service = new AiService(gemini, STUB_TOOLS);
 
     await expect(service.narrative(context, 3)).rejects.toThrow("API down");
   });
@@ -143,7 +149,7 @@ describe("AiService.swot", () => {
         citedSources: ["scoreInput.financials.roe", "scoreInput.financials.pe"],
       }),
     ]);
-    const service = new AiService(gemini);
+    const service = new AiService(gemini, STUB_TOOLS);
 
     const result = await service.swot(context);
     expect(result.text).toContain("13.7%");
@@ -160,7 +166,7 @@ describe("AiService.swot", () => {
         citedSources: [],
       }),
     ]);
-    const service = new AiService(gemini);
+    const service = new AiService(gemini, STUB_TOOLS);
 
     await expect(service.swot(context, 1)).rejects.toBeInstanceOf(
       NarrativeAuditFailedError,

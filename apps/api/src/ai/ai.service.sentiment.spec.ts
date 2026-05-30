@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { AiService } from "./ai.service";
 import type { GeminiClient } from "./gemini.client";
+import type { ToolRegistry } from "./tools/tools.registry";
 import { NEWS_EMBEDDING_DIM } from "../news/vector/vector-index.constants";
+
+const STUB_TOOLS: ToolRegistry = {
+  declarations: [],
+  execute: vi.fn(),
+};
 
 function makeGemini(opts: {
   generateText?: string;
@@ -29,7 +35,7 @@ describe("AiService.classifySentiment", () => {
         rationaleOneLine: "Quarterly profit rose on strong EV demand.",
       }),
     });
-    const service = new AiService(gemini);
+    const service = new AiService(gemini, STUB_TOOLS);
 
     const result = await service.classifySentiment("Tata Motors Q4 profit jumps");
 
@@ -48,7 +54,7 @@ describe("AiService.classifySentiment", () => {
         rationaleOneLine: "Strong BUY signal on Tata Motors.",
       }),
     });
-    const service = new AiService(gemini);
+    const service = new AiService(gemini, STUB_TOOLS);
 
     const result = await service.classifySentiment("Tata Motors rallies");
 
@@ -61,7 +67,7 @@ describe("AiService.classifySentiment", () => {
 describe("AiService.embedForStorage", () => {
   it("returns a vector of the configured dimension", async () => {
     const vec = Array.from({ length: NEWS_EMBEDDING_DIM }, () => 0.01);
-    const service = new AiService(makeGemini({ embedding: vec }));
+    const service = new AiService(makeGemini({ embedding: vec }), STUB_TOOLS);
 
     const result = await service.embedForStorage("Tata Motors profit jumps 30%");
 
@@ -69,7 +75,7 @@ describe("AiService.embedForStorage", () => {
   });
 
   it("throws on a dimension mismatch (second line of defence after boot assert)", async () => {
-    const service = new AiService(makeGemini({ embedding: [0.1, 0.2, 0.3] }));
+    const service = new AiService(makeGemini({ embedding: [0.1, 0.2, 0.3] }), STUB_TOOLS);
 
     await expect(service.embedForStorage("short vector")).rejects.toThrow(
       /dim mismatch/i,
@@ -77,7 +83,7 @@ describe("AiService.embedForStorage", () => {
   });
 
   it("throws when the SDK returns no embedding", async () => {
-    const service = new AiService(makeGemini({ embedding: undefined }));
+    const service = new AiService(makeGemini({ embedding: undefined }), STUB_TOOLS);
 
     await expect(service.embedForStorage("no embedding")).rejects.toThrow(
       /dim mismatch/i,

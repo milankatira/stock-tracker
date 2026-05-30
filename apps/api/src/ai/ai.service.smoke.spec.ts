@@ -2,8 +2,14 @@ import { describe, expect, it, beforeAll } from "vitest";
 import { ConfigService } from "@nestjs/config";
 import { AiService } from "./ai.service";
 import { GeminiClient } from "./gemini.client";
+import type { ToolRegistry } from "./tools/tools.registry";
 import { NEWS_EMBEDDING_DIM } from "../news/vector/vector-index.constants";
 import { sanitiseAndCheck } from "../compliance/compliance.sanitiser";
+
+const STUB_TOOLS: ToolRegistry = {
+  declarations: [],
+  execute: () => Promise.reject(new Error("unused in smoke")),
+};
 
 /**
  * Live-Gemini smoke tests (NEWS-02 / NEWS-03). Skipped by default —
@@ -16,7 +22,7 @@ describe.skipIf(process.env.RUN_LIVE_SMOKE !== "1")("AiService (live Gemini smok
 
   beforeAll(() => {
     const config = new ConfigService({ GEMINI_API_KEY: process.env.GEMINI_API_KEY });
-    service = new AiService(new GeminiClient(config));
+    service = new AiService(new GeminiClient(config), STUB_TOOLS);
   });
 
   it("embeds a document at 768 dimensions", async () => {
