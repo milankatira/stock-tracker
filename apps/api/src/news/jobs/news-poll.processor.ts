@@ -15,6 +15,11 @@ import { tagMentions, type InstrumentEntry } from "../ingest/ticker-tagger";
 import { NewsService } from "../news.service";
 import { RssNewsAdapter } from "../../modules/market-data/rss-news.adapter";
 import { InstrumentsRepository } from "../../modules/market-data/instruments/instruments.repository";
+import {
+  NEWS_EMBED_CLASSIFY_JOB,
+  NEWS_EMBED_CLASSIFY_QUEUE_NAME,
+  type EmbedClassifyJobData,
+} from "../../jobs/news-embed-classify/embed-classify.queue";
 
 /**
  * BullMQ processor for the three-tier news-poll fan-out. Persists
@@ -36,6 +41,8 @@ export class NewsPollProcessor extends WorkerHost {
 
   constructor(
     @InjectQueue(NEWS_POLL_QUEUE_NAME) private readonly queue: Queue,
+    @InjectQueue(NEWS_EMBED_CLASSIFY_QUEUE_NAME)
+    private readonly embedQueue: Queue,
     private readonly rss: RssNewsAdapter,
     private readonly news: NewsService,
     private readonly instruments: InstrumentsRepository,
@@ -138,6 +145,22 @@ export class NewsPollProcessor extends WorkerHost {
       groupLevel: tagged.groupLevel,
     });
     if (!persisted) return { persisted: false, deduped: true };
+
+    // Enqueue embed + classify ONLY for the freshly-inserted doc. On a
+    // dedup hit `persisted` is null and we skip — re-embedding existing
+    // articles would burn Gemini spend on every 30-min poll.
+    const newsId = String((persisted as unknown as { _id: unknown })._id);
+    await this.embedQueue.add(
+      NEWS_EMBED_CLASSIFY_JOB,
+      { newsId } satisfies EmbedClassifyJobData,
+      {
+        jobId: `embed-classify:${newsId}`,
+        attempts: 5,
+        backoff: { type: "exponential", delay: 2000 },
+        removeOnComplete: { count: 1000 },
+        removeOnFail: { count: 5000 },
+      },
+    );
     return { persisted: true };
   }
 

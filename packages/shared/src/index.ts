@@ -2,6 +2,7 @@ export * from "./api-errors";
 export * from "./fund-report";
 export * from "./instrument-match";
 export * from "./instruments";
+export * from "./news";
 export * from "./providers";
 export * from "./scoring";
 export * from "./stock-report";

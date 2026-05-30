@@ -16,13 +16,29 @@ import {
 import {
   NarrativeAuditFailedError,
   type NarrativeResult,
+  type SentimentLabel,
+  type SentimentResult,
   type SwotOutput,
   type SwotResult,
 } from "./ai.types";
 import { GeminiClient } from "./gemini.client";
+import { sanitiseAndCheck } from "../compliance/compliance.sanitiser";
+import {
+  SENTIMENT_RESPONSE_SCHEMA,
+  SENTIMENT_SYSTEM_PROMPT,
+} from "./prompts/sentiment.prompt";
+import { NEWS_EMBEDDING_DIM } from "../news/vector/vector-index.constants";
 
 const NARRATIVE_MODEL = "gemini-2.5-flash";
 const SWOT_MODEL = "gemini-2.5-flash";
+const SENTIMENT_MODEL = "gemini-2.5-flash-lite";
+const EMBEDDING_MODEL = "gemini-embedding-001";
+
+interface RawSentiment {
+  readonly sentiment: SentimentLabel;
+  readonly confidence: number;
+  readonly rationaleOneLine: string;
+}
 
 interface RawNarrative {
   readonly paragraph: string;
@@ -166,6 +182,75 @@ export class AiService {
       threats: [...raw.threats],
       citedSources: [...raw.citedSources],
     };
+  }
+
+  /**
+   * Classify the sentiment of a news headline toward its instrument
+   * (NEWS-02). Returns the enum label + confidence + a one-line
+   * rationale. The rationale is run through the compliance sanitiser
+   * here — on any forbidden-verb match it is dropped to `null` rather
+   * than blocking the whole classification, so a compliant label still
+   * persists. The enum label is schema-constrained and inherently safe.
+   */
+  async classifySentiment(text: string): Promise<SentimentResult> {
+    const response = await this.gemini.genai.models.generateContent({
+      model: SENTIMENT_MODEL,
+      contents: text,
+      config: {
+        systemInstruction: SENTIMENT_SYSTEM_PROMPT,
+        responseMimeType: "application/json",
+        responseSchema: SENTIMENT_RESPONSE_SCHEMA as unknown as Record<
+          string,
+          unknown
+        >,
+        temperature: 0.0,
+      },
+    });
+    const raw = this.parseStructured<RawSentiment>(response.text ?? "");
+    const { violations } = sanitiseAndCheck(raw.rationaleOneLine ?? "");
+    if (violations.length > 0) {
+      // Do NOT log the raw rationale — that would re-introduce the
+      // forbidden token into logs. Log only the matched rule labels.
+      this.logger.warn(
+        { violations },
+        "sentiment_rationale_dropped_on_compliance_violation",
+      );
+    }
+    return {
+      sentiment: raw.sentiment,
+      confidence: raw.confidence,
+      rationaleOneLine: violations.length > 0 ? null : raw.rationaleOneLine,
+    };
+  }
+
+  /**
+   * Embed a document for storage in Atlas Vector Search (NEWS-03).
+   * Uses `RETRIEVAL_DOCUMENT` task type at `NEWS_EMBEDDING_DIM` so the
+   * vector exactly matches the boot-asserted index dimension. Asserts
+   * the returned length — second line of defence after the boot check.
+   */
+  async embedForStorage(text: string): Promise<number[]> {
+    return this.embed(text, "RETRIEVAL_DOCUMENT");
+  }
+
+  /** Embed a search query (`RETRIEVAL_QUERY`). Consumed by Phase 7. */
+  async embedForQuery(text: string): Promise<number[]> {
+    return this.embed(text, "RETRIEVAL_QUERY");
+  }
+
+  private async embed(text: string, taskType: string): Promise<number[]> {
+    const response = await this.gemini.genai.models.embedContent({
+      model: EMBEDDING_MODEL,
+      contents: text,
+      config: { taskType, outputDimensionality: NEWS_EMBEDDING_DIM },
+    });
+    const values = response.embeddings?.[0]?.values;
+    if (!values || values.length !== NEWS_EMBEDDING_DIM) {
+      throw new Error(
+        `Embedding dim mismatch: got ${values?.length ?? "none"}, expected ${NEWS_EMBEDDING_DIM}`,
+      );
+    }
+    return values;
   }
 
   private async callNarrative(

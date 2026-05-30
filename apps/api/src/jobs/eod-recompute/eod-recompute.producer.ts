@@ -7,6 +7,7 @@ import {
   EOD_PARENT_JOB_NAME,
   EOD_QUEUE_NAME,
   EOD_SCHEDULER_KEY,
+  type EodChildPayload,
 } from "./eod-recompute.types";
 
 const CHUNK_SIZE = 100;
@@ -54,6 +55,38 @@ export class EodRecomputeProducer {
       },
     );
     this.logger.log({ scheduler: EOD_SCHEDULER_KEY }, "eod_recompute_cron_registered");
+  }
+
+  /**
+   * Enqueue a single-instrument recompute outside the nightly fan-out.
+   * Used by the selective sentiment trigger (NEWS-04) when a news-driven
+   * pillar shift is large enough to warrant an intraday recompute. Shares
+   * the same `${instrumentId}:${asOfDate}` idempotency key as the cron
+   * child so a same-day cron run and a sentiment trigger collapse to one.
+   */
+  async enqueueInstrument(
+    instrumentId: string,
+    instrumentType: "STOCK" | "FUND",
+    asOfDate: string,
+    triggeredBy: string,
+  ): Promise<void> {
+    await this.queue.add(
+      EOD_CHILD_JOB_NAME,
+      {
+        instrumentId,
+        instrumentType,
+        asOfDate,
+        triggeredBy,
+      } satisfies EodChildPayload,
+      {
+        jobId: `${instrumentId}:${asOfDate}`,
+        attempts: 3,
+        backoff: { type: "exponential", delay: 5_000 },
+        removeOnComplete: true,
+        removeOnFail: { count: 500 },
+      },
+    );
+    this.logger.log({ instrumentId, triggeredBy }, "eod_recompute_single_enqueued");
   }
 
   async fanOut(asOfDate: string, triggeredBy = "cron"): Promise<FanOutResult> {

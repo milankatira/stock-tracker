@@ -2,15 +2,18 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { StockReportDoc } from "@finsight/shared";
 import { getStockReport } from "@/app/_lib/reports/fetch";
+import { getStockNews } from "@/app/_lib/reports/fetch-news";
 import { DisclaimerFooter } from "@/app/_components/reports/DisclaimerFooter";
 import { FundamentalsStrip } from "@/app/_components/reports/FundamentalsStrip";
 import { InsightCards } from "@/app/_components/reports/InsightCards";
 import { NarrativeBlock } from "@/app/_components/reports/NarrativeBlock";
+import { NewsFeed } from "@/app/_components/reports/NewsFeed";
 import { PeerCard } from "@/app/_components/reports/PeerCard";
 import { PriceChart } from "@/app/_components/reports/PriceChart";
 import {
   CardsShell,
   ChartShell,
+  NewsShell,
   PeersShell,
   ScoreVerdictShell,
 } from "@/app/_components/reports/ReportSkeleton";
@@ -65,6 +68,11 @@ async function CardsSection({ ticker }: { ticker: string }) {
   return <InsightCards doc={doc} />;
 }
 
+async function NewsSection({ ticker }: { ticker: string }) {
+  const items = await getStockNews(ticker);
+  return <NewsFeed items={items} />;
+}
+
 async function NarrativeAndPeersSection({ ticker }: { ticker: string }) {
   const doc = await loadDoc(ticker);
   return (
@@ -95,6 +103,9 @@ export default async function StockReportPage({ params }: StockReportPageProps) 
       </Suspense>
       <Suspense fallback={<CardsShell />}>
         <CardsSection ticker={upper} />
+      </Suspense>
+      <Suspense fallback={<NewsShell />}>
+        <NewsSection ticker={upper} />
       </Suspense>
       <Suspense fallback={<PeersShell />}>
         <NarrativeAndPeersSection ticker={upper} />

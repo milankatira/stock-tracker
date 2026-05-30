@@ -27,6 +27,20 @@ export interface SwotResult {
  */
 export interface SwotOutput extends AiOutput, SwotResult {}
 
+/** News-sentiment label (NEWS-02). Mirrors `packages/shared` and `sentiment/aggregator`. */
+export type SentimentLabel = "POSITIVE" | "NEGATIVE" | "NEUTRAL";
+
+/**
+ * Result of `AiService.classifySentiment()`. `rationaleOneLine` is
+ * post-sanitiser — it is set to `null` if the model emitted any
+ * forbidden verb, so the persisted rationale is always compliance-clean.
+ */
+export interface SentimentResult {
+  readonly sentiment: SentimentLabel;
+  readonly confidence: number;
+  readonly rationaleOneLine: string | null;
+}
+
 /** Failure mode emitted when the audit loop exhausts its retry budget. */
 export class NarrativeAuditFailedError extends Error {
   constructor(public readonly attempts: number, message: string) {
