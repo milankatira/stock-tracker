@@ -1,5 +1,14 @@
-import { Injectable, Logger, UseInterceptors } from "@nestjs/common";
+import { Inject, Injectable, Logger, UseInterceptors } from "@nestjs/common";
+import type { Content, FunctionCall, Part } from "@google/genai";
 import { ComplianceInterceptor } from "../compliance/compliance.interceptor";
+import { SentenceBuffer } from "./sanitiser/sentence-buffer";
+import { RefusalCategory } from "./refusal/refusal.enum";
+import { buildChatSystemPrompt } from "./prompts/chat-system.prompt";
+import {
+  TOOL_REGISTRY_TOKEN,
+  type ToolRegistry,
+} from "./tools/tools.registry";
+import { ToolError, type ToolContext } from "./tools/tool.types";
 import { auditNumbers } from "./numeric-audit";
 import {
   substituteSlots,
@@ -33,6 +42,34 @@ const NARRATIVE_MODEL = "gemini-2.5-flash";
 const SWOT_MODEL = "gemini-2.5-flash";
 const SENTIMENT_MODEL = "gemini-2.5-flash-lite";
 const EMBEDDING_MODEL = "gemini-embedding-001";
+const CHAT_MODEL = "gemini-2.5-flash";
+const MAX_TOOL_TURNS = 5;
+
+export interface ChatCitation {
+  readonly sourceTag: string;
+  readonly asOfDate: Date;
+}
+
+/**
+ * Callback-driven contract for `AiService.chatStream`. The caller
+ * (ChatService) supplies a pre-built `ToolContext` (so AiModule does not
+ * depend on every read-path module) and receives streamed events via the
+ * callbacks, which it forwards onto the SSE `Observable`.
+ */
+export interface ChatStreamOpts {
+  readonly history: Content[];
+  readonly userMessage: string;
+  readonly toolContext: ToolContext;
+  readonly abortSignal: AbortSignal;
+  readonly onSafeChunk: (text: string) => void;
+  readonly onToolStart: (name: string) => void;
+  readonly onToolEnd: (name: string, citation: ChatCitation) => void;
+  readonly onRefusal: (cat: RefusalCategory, meta?: Record<string, unknown>) => void;
+  readonly onComplete: (
+    fullAssistantText: string,
+    citations: ChatCitation[],
+  ) => Promise<void> | void;
+}
 
 interface RawSentiment {
   readonly sentiment: SentimentLabel;
@@ -80,7 +117,130 @@ export class AiService {
   private readonly logger = new Logger(AiService.name);
   static readonly MAX_RETRIES = 3;
 
-  constructor(private readonly gemini: GeminiClient) {}
+  constructor(
+    private readonly gemini: GeminiClient,
+    @Inject(TOOL_REGISTRY_TOKEN) private readonly tools: ToolRegistry,
+  ) {}
+
+  /**
+   * Stream a compliance-safe chat answer (CHAT-01/03/04). Runs the
+   * manual function-calling interleave loop proven in the Plan 01 spike:
+   * stream → collect functionCalls → execute read-only tools → append a
+   * model functionCall turn + a user functionResponse turn → re-stream.
+   * Text flows through a SentenceBuffer so the client only ever sees
+   * fully-formed, sanitised sentences. Tool turns are capped at N=5.
+   */
+  async chatStream(opts: ChatStreamOpts): Promise<void> {
+    const buffer = new SentenceBuffer();
+    const citations: ChatCitation[] = [];
+    const safe: string[] = [];
+    let toolTurns = 0;
+
+    let contents: Content[] = [
+      ...opts.history,
+      { role: "user", parts: [{ text: opts.userMessage }] },
+    ];
+
+    const systemInstruction = buildChatSystemPrompt(opts.toolContext.scope);
+
+    // Bounded outer loop — each iteration is one Gemini stream; tool turns
+    // accumulate across iterations and are hard-capped at MAX_TOOL_TURNS.
+    for (let iteration = 0; iteration <= MAX_TOOL_TURNS + 1; iteration += 1) {
+      if (opts.abortSignal.aborted) return;
+
+      const stream = await this.gemini.genai.models.generateContentStream({
+        model: CHAT_MODEL,
+        contents,
+        config: {
+          systemInstruction,
+          tools: [{ functionDeclarations: [...this.tools.declarations] }],
+          temperature: 0.3,
+          maxOutputTokens: 1024,
+          abortSignal: opts.abortSignal,
+        },
+      });
+
+      const calls: FunctionCall[] = [];
+      for await (const chunk of stream) {
+        if (opts.abortSignal.aborted) return;
+        if (chunk.functionCalls?.length) {
+          calls.push(...chunk.functionCalls);
+          continue;
+        }
+        if (chunk.text) {
+          for (const sentence of buffer.feed(chunk.text)) {
+            if (buffer.sawForbidden) {
+              opts.onRefusal(RefusalCategory.NON_COMPLIANT_BUYSELL);
+              return;
+            }
+            safe.push(sentence);
+            opts.onSafeChunk(sentence);
+          }
+        }
+      }
+
+      if (calls.length === 0) {
+        for (const sentence of buffer.flush()) {
+          if (buffer.sawForbidden) {
+            opts.onRefusal(RefusalCategory.NON_COMPLIANT_BUYSELL);
+            return;
+          }
+          safe.push(sentence);
+          opts.onSafeChunk(sentence);
+        }
+        await opts.onComplete(safe.join(" "), citations);
+        return;
+      }
+
+      // Execute every requested tool, honouring the N=5 cap.
+      const responseParts: Part[] = [];
+      for (const fc of calls) {
+        toolTurns += 1;
+        if (toolTurns > MAX_TOOL_TURNS) {
+          opts.onRefusal(RefusalCategory.TOOL_LIMIT_EXCEEDED);
+          return;
+        }
+        const name = fc.name ?? "unknown";
+        opts.onToolStart(name);
+        const response = await this.runTool(fc, name, opts, citations);
+        responseParts.push({ functionResponse: { name, response } });
+      }
+
+      contents = [
+        ...contents,
+        { role: "model", parts: calls.map((fc) => ({ functionCall: fc })) },
+        { role: "user", parts: responseParts },
+      ];
+    }
+  }
+
+  private async runTool(
+    fc: FunctionCall,
+    name: string,
+    opts: ChatStreamOpts,
+    citations: ChatCitation[],
+  ): Promise<Record<string, unknown>> {
+    try {
+      const result = await this.tools.execute(
+        { name, args: fc.args ?? {} },
+        opts.toolContext,
+      );
+      const citation: ChatCitation = {
+        sourceTag: result.sourceTag,
+        asOfDate: result.asOfDate,
+      };
+      citations.push(citation);
+      opts.onToolEnd(name, citation);
+      return result.data as Record<string, unknown>;
+    } catch (err) {
+      // Surface a structured error to Gemini so it can recover gracefully,
+      // rather than aborting the whole stream.
+      const code = err instanceof ToolError ? err.code : "ERROR";
+      opts.onToolEnd(name, { sourceTag: `error:${name}`, asOfDate: new Date(0) });
+      this.logger.warn({ tool: name, code }, "chat_tool_failed");
+      return { error: code };
+    }
+  }
 
   async narrative(
     context: NarrativeContext,

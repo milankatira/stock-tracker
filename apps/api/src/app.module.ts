@@ -13,6 +13,7 @@ import { HealthModule } from "./modules/health/health.module";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { AdminScoringModule } from "./admin/scoring/admin-scoring.module";
 import { AiModule } from "./ai/ai.module";
+import { ChatModule } from "./chat/chat.module";
 import { ComplianceModule } from "./compliance/compliance.module";
 import { EodRecomputeModule } from "./jobs/eod-recompute/eod-recompute.module";
 import { NarrativeBatchModule } from "./jobs/narrative-batch/narrative-batch.module";
@@ -61,6 +62,7 @@ import { AppController } from "./app.controller";
     AnalysisModule,
     AuthModule,
     CacheModule,
+    ChatModule,
     ComplianceModule,
     EodRecomputeModule,
     EventEmitterModule.forRoot(),

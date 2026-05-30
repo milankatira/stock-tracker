@@ -25,7 +25,7 @@ export interface NewsReadItem {
   readonly url: string;
   readonly source: string;
   readonly publishedAt: string;
-  readonly sentiment: "POSITIVE" | "NEGATIVE" | "NEUTRAL" | null;
+  readonly sentiment: "POSITIVE" | "NEGATIVE" | "NEUTRAL" | null | undefined;
 }
 
 export interface StockReportReader {
