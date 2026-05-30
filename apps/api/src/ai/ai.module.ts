@@ -3,6 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { ComplianceModule } from "../compliance/compliance.module";
 import { AiService } from "./ai.service";
 import { GeminiClient } from "./gemini.client";
+import { TOOL_REGISTRY, TOOL_REGISTRY_TOKEN } from "./tools/tools.registry";
 
 /**
  * AIModule wires a private `GeminiClient` to the public `AiService`
@@ -12,7 +13,11 @@ import { GeminiClient } from "./gemini.client";
  */
 @Module({
   imports: [ConfigModule, ComplianceModule],
-  providers: [GeminiClient, AiService],
-  exports: [AiService],
+  providers: [
+    GeminiClient,
+    AiService,
+    { provide: TOOL_REGISTRY_TOKEN, useValue: TOOL_REGISTRY },
+  ],
+  exports: [AiService, TOOL_REGISTRY_TOKEN],
 })
 export class AiModule {}
