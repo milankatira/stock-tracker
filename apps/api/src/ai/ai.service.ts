@@ -63,7 +63,8 @@ export interface ChatStreamOpts {
   readonly abortSignal: AbortSignal;
   readonly onSafeChunk: (text: string) => void;
   readonly onToolStart: (name: string) => void;
-  readonly onToolEnd: (name: string, citation: ChatCitation) => void;
+  /** `data` is the raw tool-result payload — consumed by the Plan 03 citation validator. */
+  readonly onToolEnd: (name: string, citation: ChatCitation, data: unknown) => void;
   readonly onRefusal: (cat: RefusalCategory, meta?: Record<string, unknown>) => void;
   readonly onComplete: (
     fullAssistantText: string,
@@ -230,13 +231,13 @@ export class AiService {
         asOfDate: result.asOfDate,
       };
       citations.push(citation);
-      opts.onToolEnd(name, citation);
+      opts.onToolEnd(name, citation, result.data);
       return result.data as Record<string, unknown>;
     } catch (err) {
       // Surface a structured error to Gemini so it can recover gracefully,
       // rather than aborting the whole stream.
       const code = err instanceof ToolError ? err.code : "ERROR";
-      opts.onToolEnd(name, { sourceTag: `error:${name}`, asOfDate: new Date(0) });
+      opts.onToolEnd(name, { sourceTag: `error:${name}`, asOfDate: new Date(0) }, { error: code });
       this.logger.warn({ tool: name, code }, "chat_tool_failed");
       return { error: code };
     }

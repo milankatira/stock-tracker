@@ -90,6 +90,7 @@ describe("AiService.chatStream", () => {
     expect(opts.onToolEnd).toHaveBeenCalledWith(
       "getInstrumentScore",
       expect.objectContaining({ sourceTag: "score:stock:RELIANCE" }),
+      expect.anything(),
     );
     expect(opts.onComplete).toHaveBeenCalledOnce();
     const [, citations] = (opts.onComplete as ReturnType<typeof vi.fn>).mock.calls[0]!;
