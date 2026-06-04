@@ -3,6 +3,7 @@ import { Throttle, ThrottlerGuard } from "@nestjs/throttler";
 import type { Response } from "express";
 import type { ComparisonVerdict, PendingScoreResponse } from "@finsight/shared";
 import { AccessTokenGuard } from "../modules/auth/access-token.guard";
+import { ToolError } from "../ai/tools/tool.types";
 import { CompareService } from "./compare.service";
 import { CompareDto } from "./dto/compare.dto";
 
@@ -31,10 +32,24 @@ export class CompareController {
     @Body() dto: CompareDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<ComparisonVerdict | PendingScoreResponse> {
-    const result = await this.compareService.compare(dto.symbols);
-    if ("error" in result && result.error === "SCORE_PENDING") {
-      res.status(422);
+    try {
+      const result = await this.compareService.compare(dto.symbols);
+      if ("error" in result && result.error === "SCORE_PENDING") {
+        res.status(422);
+      }
+      return result;
+    } catch (err) {
+      // A pending score is an EXPECTED, non-error condition (freshly-added
+      // instrument awaiting the nightly recompute). Whether the service
+      // returns the PendingScoreResponse shape OR throws a `NO_SCORE_YET`
+      // ToolError, both must surface as 422 — never a 500 that would page.
+      // `ToolError` carries the offending symbol in its `message` (see
+      // `new ToolError(code, message)`).
+      if (err instanceof ToolError && err.code === "NO_SCORE_YET") {
+        res.status(422);
+        return { error: "SCORE_PENDING", symbol: err.message };
+      }
+      throw err;
     }
-    return result;
   }
 }
