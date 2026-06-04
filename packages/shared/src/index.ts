@@ -1,4 +1,5 @@
 export * from "./api-errors";
+export * from "./comparison";
 export * from "./fund-report";
 export * from "./instrument-match";
 export * from "./instruments";
