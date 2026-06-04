@@ -126,7 +126,8 @@ If any input symbol has no persisted `StockReportDoc`, `CompareService.compare` 
 
 ## Verification (all green)
 - `ai.service.compare.spec.ts` 6/6, `compare.controller.spec.ts` 9/9 (incl. 429 throttle, 422 pending, 401, sanitised rationale).
-- Existing ai.service specs (chat-stream/sentiment/spec) 18/18 — no regression.
+- **Full `apps/api` unit suite: 724 passed / 3 skipped (gated live-Gemini), 0 fail** — confirms the cross-cutting edits (`ai.service.ts`, `app.module.ts`, shared barrel) caused no regression.
+- **`apps/api` e2e suite (boots full `AppModule` incl. `CompareModule`): 16/16 pass** — confirms `CompareModule` DI wiring (AiModule + PrecomputedReportsModule + AuthModule) resolves at boot.
 - `apps/api tsc --noEmit` clean; `apps/web tsc --noEmit` clean.
 - `verdict-card.test.tsx` 4/4; `apps/web next build` succeeds (`/compare` static, `/compare/result` dynamic).
 
