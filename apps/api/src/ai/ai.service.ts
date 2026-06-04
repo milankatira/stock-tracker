@@ -32,18 +32,31 @@ import {
 } from "./ai.types";
 import { GeminiClient } from "./gemini.client";
 import { sanitiseAndCheck } from "../compliance/compliance.sanitiser";
+import { applyReplacements } from "./sanitiser/forbidden-verbs";
+import {
+  COMPARE_SYSTEM_PROMPT,
+  buildComparePrompt,
+  type CompareScoreContext,
+} from "./prompts/compare-system.prompt";
 import {
   SENTIMENT_RESPONSE_SCHEMA,
   SENTIMENT_SYSTEM_PROMPT,
 } from "./prompts/sentiment.prompt";
 import { NEWS_EMBEDDING_DIM } from "../news/vector/vector-index.constants";
+import {
+  type ComparisonVerdict,
+  type Verdict,
+  isVerdict,
+} from "@finsight/shared";
 
 const NARRATIVE_MODEL = "gemini-2.5-flash";
 const SWOT_MODEL = "gemini-2.5-flash";
 const SENTIMENT_MODEL = "gemini-2.5-flash-lite";
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const CHAT_MODEL = "gemini-2.5-flash";
+const COMPARE_MODEL = "gemini-2.5-flash";
 const MAX_TOOL_TURNS = 5;
+const RATIONALE_MAX_LEN = 400;
 
 export interface ChatCitation {
   readonly sourceTag: string;
@@ -241,6 +254,105 @@ export class AiService {
       this.logger.warn({ tool: name, code }, "chat_tool_failed");
       return { error: code };
     }
+  }
+
+  /**
+   * Produce a single structured comparison verdict (STOCK-07) for 2-3
+   * instruments whose scores have ALREADY been loaded deterministically by
+   * the caller (`CompareService` reads `ReportsService.getStock`). This is a
+   * one-shot, non-streaming `generateContent` call with `responseSchema` —
+   * deliberately NOT the streaming chat path, because a comparison is a
+   * single typed verdict, not a conversation.
+   *
+   * AI-invariant enforcement:
+   *  - Gemini receives the persisted scores as prompt context only.
+   *  - `winnerSymbol` is constrained to the input set by the schema enum and
+   *    re-checked here (belt-and-braces, T-07-26).
+   *  - `scoreDelta` is RECOMPUTED server-side and Gemini's emission is
+   *    discarded (T-07-25) — Gemini never contributes a number.
+   *  - `rationale` is run through the same forbidden-verb sanitiser as chat
+   *    (T-07-24) before it leaves the service.
+   *
+   * Throws `ToolError('NO_SCORE_YET', symbol)` semantics are owned by the
+   * caller; this method assumes every passed score is present.
+   */
+  async compare(
+    scores: readonly CompareScoreContext[],
+  ): Promise<ComparisonVerdict> {
+    if (scores.length < 2 || scores.length > 3) {
+      throw new Error("compare_requires_2_to_3_scores");
+    }
+    const symbols = scores.map((s) => s.symbol);
+
+    const response = await this.gemini.genai.models.generateContent({
+      model: COMPARE_MODEL,
+      contents: [
+        { role: "user", parts: [{ text: buildComparePrompt(scores) }] },
+      ],
+      config: {
+        systemInstruction: COMPARE_SYSTEM_PROMPT,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            winnerSymbol: { type: "string", enum: symbols },
+            rationale: { type: "string", maxLength: RATIONALE_MAX_LEN },
+            scoreDelta: { type: "number" },
+          },
+          required: ["winnerSymbol", "rationale", "scoreDelta"],
+          propertyOrdering: ["winnerSymbol", "rationale", "scoreDelta"],
+        } as unknown as Record<string, unknown>,
+        temperature: 0.2,
+      },
+    });
+
+    const parsed = this.parseStructured<{
+      winnerSymbol: string;
+      rationale: string;
+      scoreDelta: number;
+    }>(response.text ?? "");
+
+    // Belt-and-braces: the enum SHOULD already constrain this (T-07-26).
+    if (!symbols.includes(parsed.winnerSymbol)) {
+      throw new Error("compare_winner_not_in_inputs");
+    }
+
+    // Compliance: rationale passes the SAME forbidden-verb pipeline as chat.
+    const rationale = applyReplacements(parsed.rationale ?? "");
+
+    // AI invariant: recompute the delta deterministically; discard Gemini's.
+    const winner = scores.find((s) => s.symbol === parsed.winnerSymbol);
+    if (!winner) throw new Error("compare_winner_not_in_inputs");
+    const maxOther = Math.max(
+      ...scores
+        .filter((s) => s.symbol !== parsed.winnerSymbol)
+        .map((s) => s.value),
+    );
+    const scoreDelta = Number((winner.value - maxOther).toFixed(2));
+
+    return {
+      winnerSymbol: parsed.winnerSymbol,
+      rationale,
+      scoreDelta,
+      scores: scores.map((s) => ({
+        symbol: s.symbol,
+        value: s.value,
+        verdict: this.coerceVerdict(s.verdict),
+        asOfDate: s.asOfDate,
+      })),
+    };
+  }
+
+  /**
+   * Narrow a persisted verdict string to the branded `Verdict`. Persisted
+   * report docs always carry a valid verdict, so a miss indicates upstream
+   * corruption — fail loud rather than ship an unbranded value.
+   */
+  private coerceVerdict(value: string): Verdict {
+    if (!isVerdict(value)) {
+      throw new Error(`compare_invalid_verdict: ${value}`);
+    }
+    return value;
   }
 
   async narrative(
