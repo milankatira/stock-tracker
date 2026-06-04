@@ -180,6 +180,50 @@ describe("AiService.compare", () => {
     expect(/\byou should buy\b/i.test(result.rationale)).toBe(false);
   });
 
+  it("preserves a rationale whose figures are all in the verified score set", async () => {
+    // 8.0 (score), 6.5 (score) and 1.5 (delta) are all verified — kept as-is.
+    const gemini = makeGemini(
+      JSON.stringify({
+        winnerSymbol: "RELIANCE.NS",
+        rationale:
+          "RELIANCE.NS leads with a FinSight Score of 8.0 versus 6.5, a gap of 1.5.",
+        scoreDelta: 1.5,
+      }),
+    );
+    const service = new AiService(gemini, STUB_TOOLS);
+
+    const result = await service.compare([
+      scoreCtx("RELIANCE.NS", 8.0, "STRONG_SCORE"),
+      scoreCtx("TCS.NS", 6.5, "CAUTION"),
+    ]);
+
+    expect(result.rationale).toContain("8.0");
+    expect(result.rationale).toContain("6.5");
+    expect(result.rationale).toContain("1.5");
+  });
+
+  it("falls back to a deterministic template when the rationale hallucinates a figure", async () => {
+    // "99" is not in the verified score/pillar/delta set — audit fails,
+    // so the unaudited prose is dropped for a figure-safe template.
+    const gemini = makeGemini(
+      JSON.stringify({
+        winnerSymbol: "RELIANCE.NS",
+        rationale: "RELIANCE.NS scores 99 on valuation.",
+        scoreDelta: 1.5,
+      }),
+    );
+    const service = new AiService(gemini, STUB_TOOLS);
+
+    const result = await service.compare([
+      scoreCtx("RELIANCE.NS", 8.0, "STRONG_SCORE"),
+      scoreCtx("TCS.NS", 6.5, "CAUTION"),
+    ]);
+
+    expect(result.rationale).not.toContain("99");
+    expect(result.rationale).toContain("RELIANCE.NS");
+    expect(result.rationale).toContain("1.5"); // the verified delta only
+  });
+
   it("overrides Gemini's scoreDelta with the deterministic server computation (AI invariant)", async () => {
     const gemini = makeGemini(
       JSON.stringify({

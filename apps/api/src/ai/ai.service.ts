@@ -333,7 +333,25 @@ export class AiService {
     }>(response.text ?? "");
 
     // Compliance: rationale passes the SAME forbidden-verb pipeline as chat.
-    const rationale = applyReplacements(parsed.rationale ?? "");
+    const sanitised = applyReplacements(parsed.rationale ?? "");
+
+    // AI invariant (WR-07-01): the compare prompt invites pillar citations,
+    // so Gemini prose can smuggle in figures that were never in the
+    // deterministic data ("leads by 2 points", "scores 8.4 on valuation").
+    // Run the SAME numeric audit the narrative/swot paths use against the
+    // verified score/pillar/delta set. Compare is a one-shot call (no retry
+    // loop), so on a miss we fall back to a deterministic template rationale
+    // built solely from verified numbers — never ship unaudited figures.
+    const verified = this.buildCompareVerifiedValues(scores, scoreDelta);
+    const audit = auditNumbers(sanitised, verified);
+    let rationale = sanitised;
+    if (!audit.ok) {
+      this.logger.warn(
+        { unexpected: audit.unexpectedTokens },
+        "compare_audit_failed",
+      );
+      rationale = this.buildCompareFallbackRationale(winner.symbol, scoreDelta);
+    }
 
     return {
       winnerSymbol: winner.symbol,
@@ -346,6 +364,53 @@ export class AiService {
         asOfDate: s.asOfDate,
       })),
     };
+  }
+
+  /**
+   * Build the verified-numeric set for the compare numeric audit. Every
+   * score, every pillar value, and the delta are emitted in multiple
+   * canonical forms (`String(v)`, `toFixed(1)`, `toFixed(2)`) because the
+   * prompt renders scores via `toFixed(1)` (so Gemini cites "8.0") while
+   * `String(8.0)` is "8" — both forms must be allowlisted or a faithful
+   * rationale would be wrongly rejected.
+   */
+  private buildCompareVerifiedValues(
+    scores: readonly CompareScoreContext[],
+    scoreDelta: number,
+  ): Record<string, string> {
+    const verified: Record<string, string> = {};
+    let i = 0;
+    const add = (n: number): void => {
+      verified[`v${i}`] = String(n);
+      i += 1;
+      verified[`v${i}`] = n.toFixed(1);
+      i += 1;
+      verified[`v${i}`] = n.toFixed(2);
+      i += 1;
+    };
+    for (const s of scores) {
+      add(s.value);
+      for (const pillar of Object.values(s.pillars)) {
+        if (typeof pillar === "number" && Number.isFinite(pillar)) add(pillar);
+      }
+    }
+    add(scoreDelta);
+    return verified;
+  }
+
+  /**
+   * Deterministic, figure-safe fallback rationale used when Gemini's prose
+   * fails the numeric audit. Built from server-verified values only and
+   * compliant phrasing — no transactional verbs, no invented numbers.
+   */
+  private buildCompareFallbackRationale(
+    winnerSymbol: string,
+    scoreDelta: number,
+  ): string {
+    if (scoreDelta === 0) {
+      return `${winnerSymbol} and the next-best instrument share the same FinSight Score; the analysis does not favour one over the other on score alone.`;
+    }
+    return `${winnerSymbol} is the higher-scoring pick, leading the next-best instrument by ${scoreDelta.toFixed(1)} on its FinSight Score.`;
   }
 
   /**
