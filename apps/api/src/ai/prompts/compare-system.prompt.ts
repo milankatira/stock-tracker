@@ -33,15 +33,23 @@ export interface CompareScoreContext {
  * Build the user-turn prompt: a deterministic, server-controlled summary
  * of each instrument's persisted score + pillar breakdown. The model only
  * ever sees these fetched numbers — it cannot introduce new ones.
+ *
+ * The winner is decided SERVER-SIDE (deterministic argmax over the scores)
+ * and passed in here, so Gemini writes the rationale ABOUT the correct
+ * instrument. Gemini's own `winnerSymbol` emission is discarded — this
+ * prompt is the only signal it gets about who won (AI invariant).
  */
-export function buildComparePrompt(scores: readonly CompareScoreContext[]): string {
+export function buildComparePrompt(
+  scores: readonly CompareScoreContext[],
+  winnerSymbol: string,
+): string {
   const lines = scores.map(
     (s) =>
       `${s.symbol}: FinSight Score ${s.value.toFixed(1)} (verdict ${s.verdict}), pillars ${JSON.stringify(
         s.pillars,
       )}, as of ${s.asOfDate}`,
   );
-  return `Compare the following Indian instruments and identify the higher-scoring pick:\n${lines.join(
+  return `Compare the following Indian instruments. The higher-scoring pick is ${winnerSymbol} (decided deterministically from the scores below — do NOT contradict it):\n${lines.join(
     "\n",
-  )}\n\nReturn the verdict JSON.`;
+  )}\n\nWrite the rationale explaining why ${winnerSymbol} scores higher, then return the verdict JSON.`;
 }

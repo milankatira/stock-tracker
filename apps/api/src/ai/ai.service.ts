@@ -266,12 +266,15 @@ export class AiService {
    *
    * AI-invariant enforcement:
    *  - Gemini receives the persisted scores as prompt context only.
-   *  - `winnerSymbol` is constrained to the input set by the schema enum and
-   *    re-checked here (belt-and-braces, T-07-26).
+   *  - `winnerSymbol` is DERIVED server-side (deterministic argmax over the
+   *    scores, with a stable tie-break) and Gemini's emission is discarded —
+   *    the winner is a metric-derived decision, so Gemini never decides it
+   *    (CR-07-01). The schema enum stays as belt-and-braces only.
    *  - `scoreDelta` is RECOMPUTED server-side and Gemini's emission is
    *    discarded (T-07-25) — Gemini never contributes a number.
    *  - `rationale` is run through the same forbidden-verb sanitiser as chat
-   *    (T-07-24) before it leaves the service.
+   *    (T-07-24) AND a numeric audit against the verified score/pillar set
+   *    (WR-07-01) before it leaves the service.
    *
    * Throws `ToolError('NO_SCORE_YET', symbol)` semantics are owned by the
    * caller; this method assumes every passed score is present.
@@ -284,10 +287,27 @@ export class AiService {
     }
     const symbols = scores.map((s) => s.symbol);
 
+    // AI invariant (CR-07-01): the winner is a metric-derived decision —
+    // a pure argmax over the deterministic FinSight Scores — so it is
+    // computed server-side, NOT delegated to Gemini. Scores are integers
+    // 1-10 so ties are frequent; the tie-break is deterministic
+    // (higher score wins; on an exact tie the alphabetically-first symbol
+    // wins). Gemini's emitted `winnerSymbol` is discarded, exactly like
+    // its `scoreDelta`.
+    const ranked = [...scores].sort(
+      (a, b) => b.value - a.value || a.symbol.localeCompare(b.symbol),
+    );
+    const winner = ranked[0];
+    const maxOther = ranked[1].value; // 2..3 inputs guaranteed above.
+    const scoreDelta = Number((winner.value - maxOther).toFixed(2));
+
     const response = await this.gemini.genai.models.generateContent({
       model: COMPARE_MODEL,
       contents: [
-        { role: "user", parts: [{ text: buildComparePrompt(scores) }] },
+        {
+          role: "user",
+          parts: [{ text: buildComparePrompt(scores, winner.symbol) }],
+        },
       ],
       config: {
         systemInstruction: COMPARE_SYSTEM_PROMPT,
@@ -312,26 +332,11 @@ export class AiService {
       scoreDelta: number;
     }>(response.text ?? "");
 
-    // Belt-and-braces: the enum SHOULD already constrain this (T-07-26).
-    if (!symbols.includes(parsed.winnerSymbol)) {
-      throw new Error("compare_winner_not_in_inputs");
-    }
-
     // Compliance: rationale passes the SAME forbidden-verb pipeline as chat.
     const rationale = applyReplacements(parsed.rationale ?? "");
 
-    // AI invariant: recompute the delta deterministically; discard Gemini's.
-    const winner = scores.find((s) => s.symbol === parsed.winnerSymbol);
-    if (!winner) throw new Error("compare_winner_not_in_inputs");
-    const maxOther = Math.max(
-      ...scores
-        .filter((s) => s.symbol !== parsed.winnerSymbol)
-        .map((s) => s.value),
-    );
-    const scoreDelta = Number((winner.value - maxOther).toFixed(2));
-
     return {
-      winnerSymbol: parsed.winnerSymbol,
+      winnerSymbol: winner.symbol,
       rationale,
       scoreDelta,
       scores: scores.map((s) => ({
