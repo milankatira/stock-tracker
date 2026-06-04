@@ -14,6 +14,7 @@ import { EventEmitterModule } from "@nestjs/event-emitter";
 import { AdminScoringModule } from "./admin/scoring/admin-scoring.module";
 import { AiModule } from "./ai/ai.module";
 import { ChatModule } from "./chat/chat.module";
+import { CompareModule } from "./chat/compare.module";
 import { ComplianceModule } from "./compliance/compliance.module";
 import { EodRecomputeModule } from "./jobs/eod-recompute/eod-recompute.module";
 import { NarrativeBatchModule } from "./jobs/narrative-batch/narrative-batch.module";
@@ -63,6 +64,7 @@ import { AppController } from "./app.controller";
     AuthModule,
     CacheModule,
     ChatModule,
+    CompareModule,
     ComplianceModule,
     EodRecomputeModule,
     EventEmitterModule.forRoot(),
