@@ -96,22 +96,68 @@ describe("AiService.compare", () => {
     ).rejects.toThrow(/2_to_3/);
   });
 
-  it("throws compare_winner_not_in_inputs when Gemini names a symbol outside the input set", async () => {
+  it("ignores Gemini's winnerSymbol and returns the deterministic argmax winner (AI invariant)", async () => {
+    // Gemini names an out-of-set symbol AND would otherwise pick the lower
+    // score — both are discarded; the server derives the winner by argmax.
     const gemini = makeGemini(
       JSON.stringify({
         winnerSymbol: "MSFT",
-        rationale: "MSFT looks strong.",
+        rationale: "RELIANCE.NS leads on fundamentals.",
         scoreDelta: 2,
       }),
     );
     const service = new AiService(gemini, STUB_TOOLS);
 
-    await expect(
-      service.compare([
-        scoreCtx("RELIANCE.NS", 8, "STRONG_SCORE"),
-        scoreCtx("TCS.NS", 6, "CAUTION"),
-      ]),
-    ).rejects.toThrow(/compare_winner_not_in_inputs/);
+    const result = await service.compare([
+      scoreCtx("RELIANCE.NS", 8, "STRONG_SCORE"),
+      scoreCtx("TCS.NS", 6, "CAUTION"),
+    ]);
+
+    // Server-derived argmax — never Gemini's "MSFT".
+    expect(result.winnerSymbol).toBe("RELIANCE.NS");
+    expect(result.scoreDelta).toBe(2);
+  });
+
+  it("derives the winner by argmax even when Gemini names the lower-scoring symbol", async () => {
+    // Gemini picks the LOWER score (TCS); server must override to RELIANCE
+    // and the delta must stay non-negative.
+    const gemini = makeGemini(
+      JSON.stringify({
+        winnerSymbol: "TCS.NS",
+        rationale: "RELIANCE.NS leads on fundamentals.",
+        scoreDelta: -1.5,
+      }),
+    );
+    const service = new AiService(gemini, STUB_TOOLS);
+
+    const result = await service.compare([
+      scoreCtx("RELIANCE.NS", 8.0, "STRONG_SCORE"),
+      scoreCtx("TCS.NS", 6.5, "CAUTION"),
+    ]);
+
+    expect(result.winnerSymbol).toBe("RELIANCE.NS");
+    expect(result.scoreDelta).toBe(1.5);
+    expect(result.scoreDelta).toBeGreaterThanOrEqual(0);
+  });
+
+  it("breaks an exact-score tie alphabetically (deterministic)", async () => {
+    const gemini = makeGemini(
+      JSON.stringify({
+        winnerSymbol: "TCS.NS",
+        rationale: "The analysis favours the alphabetically-first instrument.",
+        scoreDelta: 0,
+      }),
+    );
+    const service = new AiService(gemini, STUB_TOOLS);
+
+    const result = await service.compare([
+      scoreCtx("TCS.NS", 7.0, "STRONG_SCORE"),
+      scoreCtx("INFY.NS", 7.0, "STRONG_SCORE"),
+    ]);
+
+    // Tie → alphabetically-first wins; delta is exactly 0.
+    expect(result.winnerSymbol).toBe("INFY.NS");
+    expect(result.scoreDelta).toBe(0);
   });
 
   it("sanitises the rationale through the same forbidden-verb pipeline as chat", async () => {

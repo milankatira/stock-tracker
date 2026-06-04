@@ -43,7 +43,9 @@ describe("VerdictCard", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders a zero or negative delta without crashing (extremely close scores)", () => {
+  it("renders a zero delta without crashing (tied scores)", () => {
+    // Winner is the deterministic argmax, so scoreDelta is always >= 0;
+    // a tie produces exactly 0 (no leading + for a non-positive delta).
     render(<VerdictCard verdict={makeVerdict({ scoreDelta: 0 })} />);
     expect(screen.getByText("0.0 vs next-best")).toBeInTheDocument();
   });
