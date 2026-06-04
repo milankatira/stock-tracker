@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
   ValidationPipe,
 } from "@nestjs/common";
-import { ThrottlerModule } from "@nestjs/throttler";
+import { ThrottlerModule, ThrottlerStorage } from "@nestjs/throttler";
 import { Test, type TestingModule } from "@nestjs/testing";
 import type { Request } from "express";
 import request from "supertest";
@@ -47,6 +47,7 @@ class StubAuthGuard implements CanActivate {
 
 describe("CompareController (e2e)", () => {
   let app: INestApplication;
+  let throttlerStorage: ThrottlerStorage;
   const compareMock = vi.fn();
 
   beforeAll(async () => {
@@ -73,6 +74,7 @@ describe("CompareController (e2e)", () => {
       }),
     );
     app.useGlobalFilters(new AllExceptionsFilter());
+    throttlerStorage = moduleRef.get<ThrottlerStorage>(ThrottlerStorage);
     await app.init();
   });
 
@@ -82,6 +84,19 @@ describe("CompareController (e2e)", () => {
 
   beforeEach(() => {
     compareMock.mockReset();
+    // The throttle test exhausts the 10/min budget for the stub user; clear
+    // the in-memory throttler storage between tests so per-test status-code
+    // assertions are not polluted by a prior test's rate-limit state.
+    const internal = throttlerStorage as unknown as {
+      storage?: Map<string, unknown> | Record<string, unknown>;
+    };
+    if (internal.storage instanceof Map) {
+      internal.storage.clear();
+    } else if (internal.storage && typeof internal.storage === "object") {
+      for (const key of Object.keys(internal.storage)) {
+        delete (internal.storage as Record<string, unknown>)[key];
+      }
+    }
   });
 
   const auth = (req: request.Test) => req.set("x-test-auth", "1");
@@ -166,8 +181,13 @@ describe("CompareController (e2e)", () => {
     expect(last).toBe(429);
   });
 
-  it("propagates a NO_SCORE_YET ToolError surfaced by the service as 422", async () => {
-    // Belt-and-braces: even if the service re-throws, the filter must not 500.
+  it("maps a thrown NO_SCORE_YET ToolError to 422 SCORE_PENDING (not 500)", async () => {
+    // A pending score is an expected condition, never a server error. Even
+    // if the service THROWS the ToolError (rather than returning the
+    // PendingScoreResponse shape), the controller must surface it as a 422
+    // with the offending symbol — a 500 here would page on a normal
+    // "freshly-added instrument" case. The symbol travels in the
+    // ToolError message.
     compareMock.mockImplementation(() => {
       throw new ToolError("NO_SCORE_YET", "NEWCO.NS");
     });
@@ -176,9 +196,7 @@ describe("CompareController (e2e)", () => {
       request(app.getHttpServer()).post("/compare"),
     ).send({ symbols: ["RELIANCE.NS", "NEWCO.NS"] });
 
-    // The controller only special-cases the returned PendingScoreResponse; a
-    // thrown ToolError is an internal error path — assert it is not a silent
-    // 2xx (defends the contract that thrown errors never look like success).
-    expect(res.status).toBeGreaterThanOrEqual(400);
+    expect(res.status).toBe(422);
+    expect(res.body).toEqual({ error: "SCORE_PENDING", symbol: "NEWCO.NS" });
   });
 });
