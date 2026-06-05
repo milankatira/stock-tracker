@@ -113,7 +113,9 @@ export default async function FundPage({
   });
 
   if (!report) {
-    void enqueueAdHocFundCompute(schemeCode);
+    // Fire-and-forget; explicit `.catch` guards against an unhandled rejection
+    // if the callee's internal try/catch is ever moved (WR-03).
+    void enqueueAdHocFundCompute(schemeCode).catch(() => undefined);
     return (
       <main>
         <StubPage type="fund" identifier={schemeCode} />
