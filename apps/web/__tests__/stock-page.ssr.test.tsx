@@ -56,7 +56,7 @@ describe("GET /stock/[ticker] -- server-rendered HTML (SEO-01, SEO-04)", () => {
       params: Promise.resolve({ ticker: "RELIANCE" }),
     });
     expect(meta.alternates?.canonical).toBe("https://finsight.ai/stock/RELIANCE");
-    expect(meta.openGraph?.type).toBe("article");
+    expect((meta.openGraph as { type?: string })?.type).toBe("article");
     expect((meta.twitter as { card?: string })?.card).toBe(
       "summary_large_image",
     );
