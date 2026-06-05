@@ -31,7 +31,7 @@ export function FundPeerCard({ peers }: FundPeerCardProps) {
                 className="flex items-center justify-between gap-3 text-sm"
               >
                 <Link
-                  href={`/fund/${encodeURIComponent(p.schemeCode)}`}
+                  href={`/app/fund/${encodeURIComponent(p.schemeCode)}`}
                   className="flex flex-col"
                   prefetch={false}
                 >

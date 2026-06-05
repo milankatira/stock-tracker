@@ -17,12 +17,12 @@ describe("PeerCard", () => {
     expect(screen.getAllByRole("link")).toHaveLength(3);
   });
 
-  it("links each peer to /stock/<ticker>", () => {
+  it("links each peer to the authed /app/stock/<ticker> report", () => {
     render(<PeerCard peers={peers} />);
     const links = screen.getAllByRole("link");
-    expect(links[0]).toHaveAttribute("href", "/stock/ONGC");
-    expect(links[1]).toHaveAttribute("href", "/stock/IOC");
-    expect(links[2]).toHaveAttribute("href", "/stock/BPCL");
+    expect(links[0]).toHaveAttribute("href", "/app/stock/ONGC");
+    expect(links[1]).toHaveAttribute("href", "/app/stock/IOC");
+    expect(links[2]).toHaveAttribute("href", "/app/stock/BPCL");
   });
 
   it("applies emerald tone for high scores and rose for low scores", () => {

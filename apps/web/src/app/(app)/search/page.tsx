@@ -16,8 +16,8 @@ export default function SearchPage() {
           onSelect={(match) => {
             const path =
               match.type === "STOCK"
-                ? `/stock/${encodeURIComponent(match.symbol)}`
-                : `/fund/${encodeURIComponent(match.symbol)}`;
+                ? `/app/stock/${encodeURIComponent(match.symbol)}`
+                : `/app/fund/${encodeURIComponent(match.symbol)}`;
             router.push(path);
           }}
         />

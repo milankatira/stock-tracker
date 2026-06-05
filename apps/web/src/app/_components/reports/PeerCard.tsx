@@ -31,7 +31,7 @@ export function PeerCard({ peers }: PeerCardProps) {
                 className="flex items-center justify-between gap-3 text-sm"
               >
                 <Link
-                  href={`/stock/${encodeURIComponent(p.ticker)}`}
+                  href={`/app/stock/${encodeURIComponent(p.ticker)}`}
                   className="flex flex-col"
                   prefetch={false}
                 >
