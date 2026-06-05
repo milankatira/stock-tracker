@@ -11,6 +11,8 @@
 import { ImageResponse } from "next/og";
 import { getFundReportFromMaterialisedStore } from "@/lib/data/fund-report";
 
+// Edge runtime per plan (see stock/[ticker]/opengraph-image.tsx for rationale).
+export const runtime = "edge";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

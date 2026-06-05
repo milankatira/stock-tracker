@@ -22,6 +22,11 @@
 import { ImageResponse } from "next/og";
 import { getStockReportFromMaterialisedStore } from "@/lib/data/stock-report";
 
+// Edge runtime per plan: ImageResponse (Satori) runs on Edge; the data layer
+// is fetch-based + `server-only`, both Edge-compatible. The materialised read
+// uses the internal-secret header — never NEXT_PUBLIC_ — so the secret stays
+// server-side even on Edge.
+export const runtime = "edge";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
