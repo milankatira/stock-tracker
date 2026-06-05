@@ -116,6 +116,8 @@ All security must-haves still hold against the shipped contract: `crypto.timingS
 
 **3. [Rule 1 - Bug] OG images use the real DTO shape.** The plan's reference used `report.score` (flat) and `report.verdictLabel`; the actual `StockReportDoc`/`FundReportDoc` expose `report.score.value` (number) and `report.score.verdict` (branded enum). Used the real fields and inlined a verdict→label map (Strong Score / Caution / Weak Score) rather than importing the client-side `VerdictBadge` into the edge image render. **Files:** both opengraph-image.tsx. **Commit:** `6269a98`.
 
+**5. [Rule 1 - Bug] robots.ts links `/sitemap/0.xml`, not `/sitemap.xml`.** Because `sitemap.ts` exports `generateSitemaps`, Next 15.5 serves the sitemap at the sharded path `/sitemap/<id>.xml` — NOT a bare `/sitemap.xml` (verified against `next/dist/lib/metadata/get-metadata-route.js` `normalizeMetadataPageToRoute`: a dynamic sitemap maps to `/sitemap/[__metadata_id__]`). The plan's reference robots (and its own verify curls `/sitemap.xml`) assumed the non-dynamic path. Pointing robots at the dead `/sitemap.xml` would have silently yielded zero crawler discovery despite green unit tests. Fixed `robots.ts` `sitemap:` → `${SITE}/sitemap/0.xml` (first shard always exists) and updated the robots test. **File:** robots.ts, robots.test.ts. **Commit:** `6579438`.
+
 **4. [Tooling] Static OG fallback PNG generated via a pure-Node PNG encoder.** `sharp`/`@vercel/og` could not be resolved/invoked from the worktree's symlinked `node_modules` (native-binding `ERR_DLOPEN_FAILED`). Produced a valid 1200×630 branded gradient PNG with a zlib-based encoder. Per-route dynamic OG images carry the text; the static fallback is the brand gradient — acceptable per the plan ("generated placeholder is acceptable; do not block on a designer dependency"). **File:** opengraph-image.png. **Commit:** `6269a98`.
 
 ## Verification status (honest)
@@ -125,7 +127,8 @@ All security must-haves still hold against the shipped contract: `crypto.timingS
 
 ## Known Limitations
 - **Webhook fires via the narrative path only.** A normal recompute flows eod → event → narrative-batch → `bustCache` → webhook. The narrative-batch `skipped:'stale-version'` branch and the compliance-violation rethrow branch return before `bustCache`, so those (rare) paths don't invalidate until the next successful narrative write — the 24h ISR floor backstops them. Pre-existing Phase-4 behavior; out of scope for this plan.
-- **Sitemap/OG are empty until Phase 2 ships the public instrument endpoint.** `listAll*` and `getTopN*` return `[]` while `PUBLIC_INSTRUMENTS_BASE` is unset; `/sitemap.xml` emits only the root URL (valid). Inherited from 08-01.
+- **Sitemap/OG are empty until Phase 2 ships the public instrument endpoint.** `listAll*` and `getTopN*` return `[]` while `PUBLIC_INSTRUMENTS_BASE` is unset; the sitemap emits only the root URL (valid). Inherited from 08-01.
+- **Sitemap served at `/sitemap/0.xml`, not `/sitemap.xml`.** `generateSitemaps` makes Next serve the sharded path; `robots.ts` links the real path. The plan's verify curls (`/sitemap.xml`) should target `/sitemap/0.xml` when run against a build.
 
 ## Secret rotation runbook (revalidate webhook)
 1. `openssl rand -hex 32` → one 32-byte hex secret.
