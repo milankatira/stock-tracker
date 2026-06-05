@@ -146,8 +146,11 @@ export default async function StockPage({
   });
 
   if (!report) {
-    // Fire-and-forget ad-hoc compute; never awaited on the request path.
-    void enqueueAdHocStockCompute(upper);
+    // Fire-and-forget ad-hoc compute; never awaited on the request path. The
+    // explicit `.catch` makes this robust regardless of callee internals — a
+    // future edit moving work outside the callee's try/catch can't surface an
+    // unhandled rejection that crashes the request (WR-03).
+    void enqueueAdHocStockCompute(upper).catch(() => undefined);
     return (
       <main>
         <StubPage type="stock" identifier={upper} />
