@@ -38,10 +38,14 @@ export function verdictLabel(verdict: string): string {
   return VERDICT_LABEL[verdict] ?? "Score";
 }
 
-/** First sentence of the narrative, used as the Article description / summary. */
+/**
+ * Article description / summary derived from the narrative. Truncated to 160
+ * chars to match the meta-description convention (page.tsx), so the structured
+ * data and the `<meta name="description">` stay consistent (WR-04).
+ */
 function summaryOf(paragraph: string | null | undefined, fallback: string): string {
   if (!paragraph) return fallback;
-  return paragraph;
+  return paragraph.slice(0, 160);
 }
 
 export interface StockJsonLdOptions {
