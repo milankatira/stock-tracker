@@ -38,6 +38,10 @@ const VERDICT_LABEL: Record<string, string> = {
   WEAK_SCORE: "Weak Score",
 };
 
+// Mirrors page.tsx TICKER_RE — guards the param before it flows into the
+// internal-API URL that carries the privileged x-internal-secret (WR-02).
+const TICKER_RE = /^[A-Z0-9&.\-_]{1,15}$/;
+
 interface OgImageProps {
   readonly params: Promise<{ readonly ticker: string }>;
 }
@@ -51,17 +55,22 @@ export default async function OgImage({
   let headline = `${upper} — FinSight Analysis`;
   let sub = "Deterministic score & plain-English analysis";
 
-  try {
-    const report = await getStockReportFromMaterialisedStore(upper, {
-      cacheTags: [`stock:${upper}`, "stock:report"],
-    });
-    if (report) {
-      headline = `${report.name} — FinSight Score ${report.score.value}/10`;
-      sub = VERDICT_LABEL[report.score.verdict] ?? "FinSight Analysis";
+  // Validate before attaching the internal secret to the fetch (WR-02). An
+  // invalid param falls through to the default branded card — the secret is
+  // never sent for an unvalidated symbol.
+  if (TICKER_RE.test(upper)) {
+    try {
+      const report = await getStockReportFromMaterialisedStore(upper, {
+        cacheTags: [`stock:${upper}`, "stock:report"],
+      });
+      if (report) {
+        headline = `${report.name} — FinSight Score ${report.score.value}/10`;
+        sub = VERDICT_LABEL[report.score.verdict] ?? "FinSight Analysis";
+      }
+    } catch {
+      // Fetch/render failures must still yield a 200 branded card so social
+      // embeds resolve. Fall through to the default headline/sub.
     }
-  } catch {
-    // Fetch/render failures must still yield a 200 branded card so social
-    // embeds resolve. Fall through to the default headline/sub.
   }
 
   return new ImageResponse(
