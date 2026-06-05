@@ -70,7 +70,7 @@ export function PublicStockReportView({
             {report.peers.map((peer) => (
               <li key={peer.ticker}>
                 <a
-                  href={`/stock/${peer.ticker}`}
+                  href={`/stock/${encodeURIComponent(peer.ticker)}`}
                   className="rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
                 >
                   {peer.name}{" "}

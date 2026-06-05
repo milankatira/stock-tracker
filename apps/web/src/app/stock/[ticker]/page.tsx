@@ -43,8 +43,10 @@ export const dynamicParams = true;
 export const revalidate = 86400;
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://finsight.ai";
-// AMFI/NSE tickers are uppercase alphanumeric + dash, bounded length (T-08-01).
-const TICKER_RE = /^[A-Z0-9-]{1,15}$/;
+// Real NSE symbols are uppercase alnum plus & . - _ (e.g. M&M, M&MFIN,
+// J&KBANK, L&TFH, BAJAJ-AUTO), bounded length (T-08-01). Rejecting `&`/`.`
+// would 404 + de-index major-cap pages (CR-01).
+const TICKER_RE = /^[A-Z0-9&.\-_]{1,15}$/;
 
 interface StockPageProps {
   readonly params: Promise<{ readonly ticker: string }>;

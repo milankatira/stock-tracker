@@ -28,6 +28,23 @@ describe("buildCanonicalStockUrl (SEO-03b)", () => {
       buildCanonicalStockUrl({ symbol: "TATAINFRA", exchange: "BSE" }),
     ).toBe(`${SITE}/stock/TATAINFRA`);
   });
+
+  // CR-01: percent-encode `&`-containing NSE symbols so the canonical URL is valid.
+  it("percent-encodes an `&`-containing NSE symbol", () => {
+    expect(buildCanonicalStockUrl({ symbol: "M&M", exchange: "NSE" })).toBe(
+      `${SITE}/stock/M%26M`,
+    );
+  });
+
+  it("percent-encodes the NSE symbol on the dual-listed BSE path", () => {
+    expect(
+      buildCanonicalStockUrl({
+        symbol: "532720",
+        exchange: "BSE",
+        nseSymbol: "M&M",
+      }),
+    ).toBe(`${SITE}/stock/M%26M`);
+  });
 });
 
 describe("buildCanonicalFundUrl (SEO-03b)", () => {
