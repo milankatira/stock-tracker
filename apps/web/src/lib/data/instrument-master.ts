@@ -39,6 +39,22 @@ export interface FundSchemeParam {
   readonly schemeCode: string;
 }
 
+/**
+ * Full-universe sitemap entry for a single stock. `lastReportComputedAt`
+ * drives the `<lastmod>` element so crawlers know when the analysis last
+ * changed (falls back to "now" when unknown).
+ */
+export interface SitemapTicker {
+  readonly symbol: string;
+  readonly lastReportComputedAt?: Date;
+}
+
+/** Full-universe sitemap entry for a single fund. */
+export interface SitemapScheme {
+  readonly schemeCode: string;
+  readonly lastReportComputedAt?: Date;
+}
+
 export async function getTopNTickers(n: number): Promise<TickerParam[]> {
   if (!PUBLIC_INSTRUMENTS_BASE) return [];
   try {
@@ -66,6 +82,71 @@ export async function getTopNFundSchemeCodes(
     );
     if (!res.ok) return [];
     return (await res.json()) as FundSchemeParam[];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Lists the FULL stock universe for `sitemap.ts` (SEO-03), one entry per
+ * NSE symbol with its last-report timestamp for `<lastmod>`.
+ *
+ * Returns `[]` until the Phase-2 public endpoint exists (gated by
+ * `PUBLIC_INSTRUMENTS_BASE`). The sitemap then emits only the root URL,
+ * which is valid — `next build` succeeds and Google still discovers the
+ * homepage. Long-tail pages remain crawlable via inbound links + on-demand
+ * ISR; they join the sitemap automatically once the endpoint lands.
+ *
+ * Distinct from `getTopNTickers` (build-time prerender cohort) — the sitemap
+ * needs the WHOLE universe, not just the top N.
+ */
+export async function listAllTickers(): Promise<SitemapTicker[]> {
+  if (!PUBLIC_INSTRUMENTS_BASE) return [];
+  try {
+    const res = await fetch(
+      `${PUBLIC_INSTRUMENTS_BASE}/instruments/public/all?type=stock`,
+      { next: { tags: ["instruments:all-stock"], revalidate: TOPN_TTL_SECONDS } },
+    );
+    if (!res.ok) return [];
+    const rows = (await res.json()) as Array<{
+      symbol: string;
+      lastReportComputedAt?: string;
+    }>;
+    return rows.map((r) => ({
+      symbol: r.symbol,
+      lastReportComputedAt: r.lastReportComputedAt
+        ? new Date(r.lastReportComputedAt)
+        : undefined,
+    }));
+  } catch {
+    // A transient outage must serve an empty (root-only) sitemap rather than
+    // break the build / 500 the crawler (threat T-08-21).
+    return [];
+  }
+}
+
+/**
+ * Lists the FULL fund universe for `sitemap.ts` (SEO-03), one entry per
+ * AMFI scheme code. Same empty-safe contract as `listAllTickers`.
+ */
+export async function listAllSchemeCodes(): Promise<SitemapScheme[]> {
+  if (!PUBLIC_INSTRUMENTS_BASE) return [];
+  try {
+    const res = await fetch(
+      `${PUBLIC_INSTRUMENTS_BASE}/instruments/public/all?type=fund`,
+      { next: { tags: ["instruments:all-fund"], revalidate: TOPN_TTL_SECONDS } },
+    );
+    if (!res.ok) return [];
+    const rows = (await res.json()) as Array<{
+      schemeCode: string;
+      lastReportComputedAt?: string;
+    }>;
+    return rows.map((r) => ({
+      schemeCode: r.schemeCode,
+      lastReportComputedAt: r.lastReportComputedAt
+        ? new Date(r.lastReportComputedAt)
+        : undefined,
+    }));
   } catch {
     return [];
   }
