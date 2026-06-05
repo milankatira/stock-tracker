@@ -14,7 +14,7 @@ Plain-English score, verdict, and reasoning for any Indian stock or mutual fund 
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Public, indexable SEO pages — one URL per stock and per fund (server-rendered, structured data) — Validated in Phase 08: public-seo-pages (RSC pages + JSON-LD + sitemap/robots/OG + revalidate webhook; full-universe sitemap pending Phase-2 public instruments endpoint)
 
 ### Active
 
@@ -31,7 +31,6 @@ Plain-English score, verdict, and reasoning for any Indian stock or mutual fund 
 - [ ] Ask FinSight — Gemini-powered conversational chat scoped to a stock/fund/portfolio, with function-calling into the data layer
 - [ ] News feed per stock with AI sentiment tags (Positive/Negative/Neutral)
 - [ ] Stock comparison (2–3 way) with AI verdict on the better pick
-- [ ] Public, indexable SEO pages — one URL per stock and per fund (server-rendered, structured data)
 - [ ] Scoring engine — deterministic compute of stock & MF scores from real data, with nightly recompute job
 - [ ] Compliance layer — "analysis not advice" framing, disclaimers, AI output sanitisation filter
 
@@ -106,4 +105,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-27 after initialization*
+*Last updated: 2026-06-05 after Phase 08 (public-seo-pages) completion*
