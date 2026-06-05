@@ -147,9 +147,17 @@ completed: 2026-06-05
 - **Files modified:** apps/web/src/app/stock/[ticker]/page.tsx, apps/web/src/app/fund/[schemeCode]/page.tsx
 - **Committed in:** `7054e35`
 
+**7. [Rule 2 - Missing Critical / Compliance] Removed the "educational purposes" loophole phrase from the stub disclaimer constant**
+- **Found during:** Final compliance review (Task 6)
+- **Issue:** `ANALYSIS_DISCLAIMER` ended with "Information provided is for educational purposes only." CLAUDE.md compliance is NON-NEGOTIABLE and explicitly forbids relying on the "educational" loophole. The real-report path already uses DTO copy (which omits the phrase), but the long-tail stub path renders this constant verbatim to real users.
+- **Fix:** Dropped the offending sentence from the constant. SSR tests only assert "Analysis, not investment advice" + "Past performance", so they stay green (136/136).
+- **Files modified:** apps/web/src/lib/seo/disclaimers.ts
+- **Verification:** vitest 136/136 pass after edit.
+- **Committed in:** (compliance fix commit, post-summary)
+
 ---
 
-**Total deviations:** 6 auto-fixed (3 blocking, 2 bug, 1 missing-critical)
+**Total deviations:** 7 auto-fixed (3 blocking, 2 bug, 2 missing-critical/compliance)
 **Impact on plan:** All deviations were required for correctness, compliance, or to compile/build. The only structural change — the Option-1 route relocation — was user-confirmed. No scope creep.
 
 ## Issues Encountered
@@ -174,6 +182,7 @@ None for tests/build. For production prerender + dual-listing canonical, set `PU
 - FOUND commit `2b44602` (route relocation)
 - FOUND commit `7054e35` (public pages)
 - Verification: 136/136 vitest pass, eslint clean, `tsc --noEmit` clean.
+- Route topology PROVEN via `pnpm build`: `/stock/[ticker]` + `/fund/[schemeCode]` build as public SSG pages and `/app/stock/[ticker]` + `/app/fund/[schemeCode]` as authed dynamic pages — no collision.
 
 ---
 *Phase: 08-public-seo-pages*

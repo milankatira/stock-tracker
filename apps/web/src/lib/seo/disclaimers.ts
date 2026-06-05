@@ -14,7 +14,7 @@
  * server-rendered HTML even when no report exists yet.
  */
 export const ANALYSIS_DISCLAIMER =
-  "Analysis, not investment advice. FinSight AI is not a SEBI-registered Research Analyst or Investment Adviser. Information provided is for educational purposes only.";
+  "Analysis, not investment advice. FinSight AI is not a SEBI-registered Research Analyst or Investment Adviser.";
 
 export const PAST_PERF_DISCLAIMER =
   "Past performance is not indicative of future returns. Mutual fund investments are subject to market risks. Read all scheme-related documents carefully.";
