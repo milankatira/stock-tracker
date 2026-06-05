@@ -43,13 +43,13 @@ describe("buildStockJsonLd (SEO-03a)", () => {
 
   it("returns a Corporation + Article pair", () => {
     expect(blocks).toHaveLength(2);
-    const [corp, article] = blocks;
+    const [corp, article] = blocks as unknown as Record<string, unknown>[];
     expect(corp["@type"]).toBe("Corporation");
     expect(article["@type"]).toBe("Article");
   });
 
   it("emits a space-separated exchange tickerSymbol", () => {
-    const [corp] = blocks;
+    const [corp] = blocks as unknown as Record<string, unknown>[];
     expect(corp.tickerSymbol).toBe("NSE RELIANCE");
   });
 
@@ -71,13 +71,13 @@ describe("buildFundJsonLd (SEO-03a)", () => {
 
   it("returns a FinancialProduct + Article pair", () => {
     expect(blocks).toHaveLength(2);
-    const [product, article] = blocks;
+    const [product, article] = blocks as unknown as Record<string, unknown>[];
     expect(product["@type"]).toBe("FinancialProduct");
     expect(article["@type"]).toBe("Article");
   });
 
   it("sets provider from the fund category metadata", () => {
-    const [product] = blocks;
+    const [product] = blocks as unknown as Record<string, unknown>[];
     expect(product.provider).toBeDefined();
   });
 
@@ -93,8 +93,11 @@ describe("buildBreadcrumbJsonLd (SEO-03a)", () => {
   it("returns a 3-level BreadcrumbList for stocks", () => {
     const crumb = buildBreadcrumbJsonLd({
       level2: { name: "Stocks", url: "https://finsight.ai/stock" },
-      leaf: { name: "Reliance Industries Ltd", url: "https://finsight.ai/stock/RELIANCE" },
-    });
+      leaf: {
+        name: "Reliance Industries Ltd",
+        url: "https://finsight.ai/stock/RELIANCE",
+      },
+    }) as unknown as Record<string, unknown>;
     expect(crumb["@type"]).toBe("BreadcrumbList");
     expect(crumb.itemListElement).toHaveLength(3);
   });
