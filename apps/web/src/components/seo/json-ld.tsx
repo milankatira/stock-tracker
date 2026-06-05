@@ -7,8 +7,11 @@
  *
  * Why `dangerouslySetInnerHTML`: JSON-LD must be emitted as raw text inside a
  * script tag, not as escaped React children. The content is server-built from
- * typed schema-dts objects (never user-controlled free text beyond the
- * already-compliance-sanitised narrative), so there is no injection surface.
+ * typed schema-dts objects. Fields originate from third-party feeds (Yahoo,
+ * AMFI, MFAPI) and Gemini narrative — untrusted — so we escape every `<` to
+ * its unicode escape, which prevents a literal closing `script` tag in any
+ * string value from terminating the script block early and rendering the
+ * following bytes as live HTML (WR-01 stored-XSS hardening).
  */
 import type { ReactElement } from "react";
 
@@ -20,7 +23,9 @@ export function JsonLd({ data }: JsonLdProps): ReactElement {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(data).replace(/</g, "\\u003c"),
+      }}
     />
   );
 }
