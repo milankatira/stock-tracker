@@ -53,7 +53,7 @@ describe("GET /fund/[schemeCode] -- server-rendered HTML (SEO-02, SEO-04)", () =
       params: Promise.resolve({ schemeCode: "120503" }),
     });
     expect(meta.alternates?.canonical).toBe("https://finsight.ai/fund/120503");
-    expect(meta.openGraph?.type).toBe("article");
+    expect((meta.openGraph as { type?: string })?.type).toBe("article");
     expect((meta.twitter as { card?: string })?.card).toBe(
       "summary_large_image",
     );
