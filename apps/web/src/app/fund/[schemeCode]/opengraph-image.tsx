@@ -22,6 +22,10 @@ const VERDICT_LABEL: Record<string, string> = {
   WEAK_SCORE: "Weak Score",
 };
 
+// Mirrors page.tsx SCHEME_RE — guards the param before it flows into the
+// internal-API URL that carries the privileged x-internal-secret (WR-02).
+const SCHEME_RE = /^[0-9]{1,7}$/;
+
 interface OgImageProps {
   readonly params: Promise<{ readonly schemeCode: string }>;
 }
@@ -34,16 +38,20 @@ export default async function OgImage({
   let headline = `Fund ${schemeCode} — FinSight Analysis`;
   let sub = "Deterministic Fund Score & plain-English analysis";
 
-  try {
-    const report = await getFundReportFromMaterialisedStore(schemeCode, {
-      cacheTags: [`fund:${schemeCode}`, "fund:report"],
-    });
-    if (report) {
-      headline = `${report.name} — FinSight Fund Score ${report.score.value}/10`;
-      sub = VERDICT_LABEL[report.score.verdict] ?? "FinSight Analysis";
+  // Validate before attaching the internal secret to the fetch (WR-02). An
+  // invalid param falls through to the default branded card.
+  if (SCHEME_RE.test(schemeCode)) {
+    try {
+      const report = await getFundReportFromMaterialisedStore(schemeCode, {
+        cacheTags: [`fund:${schemeCode}`, "fund:report"],
+      });
+      if (report) {
+        headline = `${report.name} — FinSight Fund Score ${report.score.value}/10`;
+        sub = VERDICT_LABEL[report.score.verdict] ?? "FinSight Analysis";
+      }
+    } catch {
+      // 200 branded card on failure so social embeds always resolve.
     }
-  } catch {
-    // 200 branded card on failure so social embeds always resolve.
   }
 
   return new ImageResponse(
