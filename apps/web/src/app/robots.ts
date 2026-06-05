@@ -6,6 +6,13 @@
  * (`/api/`), and auth flows (`/auth/`) — none of which should be indexed.
  * Links the sitemap so crawlers discover the full universe of pages.
  *
+ * Sitemap URL: because `sitemap.ts` exports `generateSitemaps`, Next.js
+ * serves the (sharded) sitemap at `/sitemap/<id>.xml` — NOT at a bare
+ * `/sitemap.xml` (verified against Next 15.5 `normalizeMetadataPageToRoute`:
+ * a dynamic sitemap maps to `/sitemap/[__metadata_id__]`). The first shard
+ * `/sitemap/0.xml` always exists (the universe is a single shard well under
+ * the 45k split threshold), so robots points there.
+ *
  * Next.js serialises this to `text/plain` at `/robots.txt`.
  */
 import type { MetadataRoute } from "next";
@@ -21,7 +28,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/app/", "/auth/"],
       },
     ],
-    sitemap: `${SITE}/sitemap.xml`,
+    sitemap: `${SITE}/sitemap/0.xml`,
     host: SITE,
   };
 }

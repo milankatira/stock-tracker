@@ -20,8 +20,10 @@ describe("robots (SEO-03)", () => {
     expect(rule.disallow).toContain("/app/");
   });
 
-  it("links the sitemap at the site origin", () => {
-    expect(robots().sitemap).toBe(`${SITE}/sitemap.xml`);
+  it("links the first sitemap shard served by generateSitemaps", () => {
+    // generateSitemaps in sitemap.ts makes Next serve /sitemap/<id>.xml, not a
+    // bare /sitemap.xml — robots must point at the real served path.
+    expect(robots().sitemap).toBe(`${SITE}/sitemap/0.xml`);
   });
 
   it("sets the canonical host", () => {
