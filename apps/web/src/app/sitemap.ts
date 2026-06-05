@@ -60,7 +60,7 @@ export default async function sitemap({
       priority: 1.0,
     },
     ...tickers.map((t) => ({
-      url: `${SITE}/stock/${t.symbol}`,
+      url: `${SITE}/stock/${encodeURIComponent(t.symbol)}`,
       lastModified: t.lastReportComputedAt ?? new Date(),
       changeFrequency: "daily" as const,
       priority: 0.8,

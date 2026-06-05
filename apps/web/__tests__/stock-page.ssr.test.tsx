@@ -61,4 +61,24 @@ describe("GET /stock/[ticker] -- server-rendered HTML (SEO-01, SEO-04)", () => {
       "summary_large_image",
     );
   });
+
+  // CR-01 regression: `&`-containing NSE symbols (e.g. M&M, J&KBANK) must NOT
+  // 404 or be de-indexed. Pre-fix the regex rejected `&` so StockPage threw
+  // notFound() and generateMetadata returned robots.index === false.
+  it("renders (does not 404) for an `&`-containing NSE symbol like M&M", async () => {
+    const StockPage = (await import("@/app/stock/[ticker]/page")).default;
+    const element = (await StockPage({
+      params: Promise.resolve({ ticker: "M&M" }),
+    })) as ReactElement;
+    const html = renderToStaticMarkup(element);
+    expect(html).toContain("FinSight Score");
+  });
+
+  it("indexes (robots.index !== false) for an `&`-containing NSE symbol", async () => {
+    const { generateMetadata } = await import("@/app/stock/[ticker]/page");
+    const meta = await generateMetadata({
+      params: Promise.resolve({ ticker: "M&M" }),
+    });
+    expect((meta.robots as { index?: boolean })?.index).not.toBe(false);
+  });
 });

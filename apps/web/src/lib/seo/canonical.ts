@@ -22,10 +22,11 @@ export interface CanonicalStockInput {
 
 export function buildCanonicalStockUrl(input: CanonicalStockInput): string {
   // Dual-listed: a BSE route param with a known NSE symbol canonicalises to NSE.
+  // Percent-encode the symbol so `&`/`.` NSE tickers (e.g. M&M) emit a valid URL.
   if (input.exchange === "BSE" && input.nseSymbol) {
-    return `${SITE}/stock/${input.nseSymbol}`;
+    return `${SITE}/stock/${encodeURIComponent(input.nseSymbol)}`;
   }
-  return `${SITE}/stock/${input.symbol}`;
+  return `${SITE}/stock/${encodeURIComponent(input.symbol)}`;
 }
 
 export interface CanonicalFundInput {
