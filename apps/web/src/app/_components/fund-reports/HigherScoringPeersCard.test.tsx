@@ -20,7 +20,7 @@ describe("HigherScoringPeersCard (COMPLIANCE-CRITICAL)", () => {
     render(<HigherScoringPeersCard peers={sample} />);
     expect(screen.getAllByRole("link")).toHaveLength(3);
     const links = screen.getAllByRole("link");
-    expect(links[0]).toHaveAttribute("href", "/fund/120100");
+    expect(links[0]).toHaveAttribute("href", "/app/fund/120100");
     expect(screen.getByText("9.0")).toBeInTheDocument();
     expect(screen.getByText("+5.0")).toBeInTheDocument();
   });
