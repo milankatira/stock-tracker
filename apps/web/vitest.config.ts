@@ -20,6 +20,7 @@ export default defineConfig({
     include: [
       "src/**/*.spec.{ts,tsx}",
       "src/**/*.test.{ts,tsx}",
+      "__tests__/**/*.test.{ts,tsx}",
     ],
     exclude: ["node_modules", ".next", "dist"],
     passWithNoTests: true,
