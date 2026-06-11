@@ -1,8 +1,54 @@
 @import "tailwindcss";
 
+/*
+ * Tailwind v4 CSS-first theme (no tailwind.config.js — locked by user directive).
+ *
+ * Two token layers:
+ *  1. shadcn semantic tokens (background/foreground/primary/muted/border/…)
+ *     consumed by every UI primitive in src/components/ui/. These were
+ *     previously undefined, so the primitives fell back to inherited colors.
+ *     Defining them here is required for correct rendering of both the
+ *     existing report UI and the Phase-9 landing page.
+ *  2. Brand + verdict tokens for the marketing surface (placeholder palette
+ *     pending designer sign-off — a rebrand is a single-file change here).
+ */
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  /* next/font (Inter) injects --font-inter on <html>; fall back to system. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* shadcn semantic tokens (light theme) */
+  --color-background: oklch(1 0 0);
+  --color-foreground: oklch(0.21 0.01 250);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.21 0.01 250);
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.21 0.01 250);
+  --color-primary: oklch(0.55 0.18 250);
+  --color-primary-foreground: oklch(0.99 0.01 250);
+  --color-secondary: oklch(0.96 0.01 250);
+  --color-secondary-foreground: oklch(0.3 0.02 250);
+  --color-muted: oklch(0.96 0.01 250);
+  --color-muted-foreground: oklch(0.5 0.02 250);
+  --color-accent: oklch(0.96 0.02 250);
+  --color-accent-foreground: oklch(0.3 0.02 250);
+  --color-destructive: oklch(0.6 0.2 25);
+  --color-destructive-foreground: oklch(0.99 0.01 25);
+  --color-border: oklch(0.92 0.01 250);
+  --color-input: oklch(0.92 0.01 250);
+  --color-ring: oklch(0.55 0.18 250);
+
+  /* brand + verdict tokens (placeholder — designer sign-off pending) */
+  --color-brand-50: oklch(0.97 0.02 250);
+  --color-brand-500: oklch(0.55 0.18 250);
+  --color-brand-700: oklch(0.42 0.2 250);
+  --color-verdict-strong: oklch(0.65 0.18 145);
+  --color-verdict-caution: oklch(0.78 0.15 75);
+  --color-verdict-weak: oklch(0.6 0.2 25);
+
+  --radius-card: 1rem;
 }
 
 html,
@@ -12,6 +58,12 @@ body {
 
 body {
   font-family: var(--font-sans);
-  background-color: #fafafa;
-  color: #111;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+/* Visible keyboard focus ring for all interactive elements (a11y). */
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
 }
