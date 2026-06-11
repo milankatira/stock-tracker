@@ -17,11 +17,16 @@ export function Nav() {
           FinSight AI
         </Link>
         <div className="flex items-center gap-2 sm:gap-4">
+          {/* prefetch disabled: /login + /signup ship in a later phase (Phase 1). */}
           <Button asChild variant="ghost" className="min-h-11">
-            <Link href="/login">Log in</Link>
+            <Link href="/login" prefetch={false}>
+              Log in
+            </Link>
           </Button>
           <Button asChild className="min-h-11">
-            <Link href="/signup">Sign up</Link>
+            <Link href="/signup" prefetch={false}>
+              Sign up
+            </Link>
           </Button>
         </div>
       </nav>

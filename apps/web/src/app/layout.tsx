@@ -27,8 +27,15 @@ export default function RootLayout({
     <html lang="en-IN" className={inter.variable}>
       <body className="font-sans antialiased">
         {children}
-        {/* Cookieless, first-party analytics — no DPDP consent burden. */}
-        <Analytics />
+        {/*
+          Cookieless, first-party analytics — no DPDP consent burden.
+          Gated to Vercel deployments: the /_vercel/insights/script.js endpoint
+          only exists on Vercel, so loading <Analytics /> off-Vercel (local dev,
+          GitHub Actions Lighthouse/axe runners) 404s and docks the
+          best-practices score. process.env.VERCEL is set at build time on
+          Vercel; the page is force-static so this resolves at build.
+        */}
+        {process.env.VERCEL ? <Analytics /> : null}
       </body>
     </html>
   );

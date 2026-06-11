@@ -80,7 +80,10 @@ export function PricingTeaser() {
                 </Button>
               ) : (
                 <Button asChild className="min-h-11 w-full">
-                  <Link href="/signup">Get started — free</Link>
+                  {/* prefetch disabled: /signup ships in a later phase (Phase 1). */}
+                  <Link href="/signup" prefetch={false}>
+                    Get started — free
+                  </Link>
                 </Button>
               )}
             </CardFooter>

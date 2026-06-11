@@ -27,7 +27,10 @@ export function Hero() {
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
             <Button asChild size="lg" className="min-h-11 w-full sm:w-auto">
-              <Link href="/signup">Get started — free</Link>
+              {/* prefetch disabled: /signup ships in a later phase (Phase 1). */}
+              <Link href="/signup" prefetch={false}>
+                Get started — free
+              </Link>
             </Button>
             <Button
               asChild
