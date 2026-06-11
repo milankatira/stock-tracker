@@ -82,6 +82,7 @@ export function Footer() {
                   <li key={l.label}>
                     <Link
                       href={l.href}
+                      prefetch={false}
                       className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground"
                     >
                       {l.label}

@@ -12,8 +12,8 @@ export function ComplianceStrip() {
     >
       <div className="mx-auto max-w-4xl px-4 py-12 text-center sm:px-6 lg:px-8">
         <p className="text-balance text-lg font-semibold text-foreground sm:text-xl">
-          Analysis, not advice. Data from NSE, BSE, AMFI. Past performance does
-          not guarantee future results.
+          Analysis, not advice. Data from NSE, BSE, AMFI. Past performance is
+          not indicative of future results.
         </p>
       </div>
     </section>
