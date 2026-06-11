@@ -1,5 +1,6 @@
 // TODO(i18n): wire copy through t() when the i18n helper ships.
 import Link from "next/link";
+import { JsonLd } from "@/components/seo/json-ld";
 
 /**
  * Footer — 4-column link grid + SEBI note. Server Component.
@@ -51,6 +52,22 @@ const columns: ReadonlyArray<{ heading: string; links: readonly FooterLink[] }> 
   ];
 
 export function Footer() {
+  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "https://finsight.ai";
+  // Organization JSON-LD — typed object, JSON.stringify is injection-safe.
+  const orgJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "FinSight AI",
+    url: site,
+    logo: `${site}/og/landing-v1.png`,
+    description:
+      "AI-powered investment analysis for Indian stocks and mutual funds. Analysis, not advice.",
+    sameAs: [
+      "https://twitter.com/finsight_ai",
+      "https://www.linkedin.com/company/finsight-ai",
+    ],
+  };
+
   return (
     <footer className="border-t border-border bg-muted/40">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -83,6 +100,7 @@ export function Footer() {
           analysis, not advice.
         </p>
       </div>
+      <JsonLd data={orgJsonLd} />
     </footer>
   );
 }

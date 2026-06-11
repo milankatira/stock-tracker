@@ -5,6 +5,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { JsonLd } from "@/components/seo/json-ld";
 import { faqs } from "./data";
 
 /**
@@ -13,6 +14,19 @@ import { faqs } from "./data";
  * Component. FAQPage JSON-LD is injected in Task 2 for separation of concerns.
  */
 export function FAQ() {
+  // FAQPage JSON-LD — driven by the same `faqs` array as the rendered
+  // accordion (single source of truth). `JSON.stringify` of typed data is
+  // injection-safe (no user input).
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map(({ q, a }) => ({
+      "@type": "Question",
+      name: q,
+      acceptedAnswer: { "@type": "Answer", text: a },
+    })),
+  };
+
   return (
     <section
       id="faq"
@@ -33,6 +47,7 @@ export function FAQ() {
           </AccordionItem>
         ))}
       </Accordion>
+      <JsonLd data={faqJsonLd} />
     </section>
   );
 }

@@ -14,6 +14,7 @@
   "dependencies": {
     "@finsight/shared": "workspace:*",
     "@microsoft/fetch-event-source": "^2.0.1",
+    "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.1",
     "lightweight-charts": "^5.2.0",
     "lucide-react": "^1.17.0",
