@@ -160,7 +160,7 @@ Plans:
   1. A public landing page communicates the value prop, a pricing teaser, and a clear CTA to sign up.
   2. The landing page renders correctly and is fully responsive across mobile and desktop.
 **Plans**: 1 plan
-- [ ] 09-01-PLAN.md — Landing page sections + analytics + OG/JSON-LD + copy-compliance Vitest test + Lighthouse + axe-core CI
+- [x] 09-01-PLAN.md — Landing page sections + analytics + OG/JSON-LD + copy-compliance Vitest test + Lighthouse + axe-core CI
 **UI hint**: yes
 
 ## Progress
