@@ -1,44 +1,25 @@
-# Dependencies
-node_modules/
-.pnpm-store/
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.python-version
 
-# Build outputs
-.turbo/
-.next/
-dist/
-build/
-out/
-*.tsbuildinfo
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
 
-# Test coverage
-coverage/
+# Local agent/tooling artifacts
+.aw
+.codebuddy/
+.aw_docs/logs/
 
-# Env files (NEVER commit real secrets — .env.example is the only env file in git)
+# Env / secrets
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
-# Logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# OS
+# OS / editor
 .DS_Store
-Thumbs.db
-
-# IDE
-.idea/
-.vscode/*
-!.vscode/settings.json
-!.vscode/extensions.json
-*.swp
-*.swo
-
-# Mongo memory server cache (binaries)
-.cache/
-
-# Misc
-*.tmp
