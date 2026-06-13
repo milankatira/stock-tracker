@@ -1,7 +1,0 @@
-export const TTL = {
-  AUTH_REFRESH_HASH: 7 * 24 * 3600,
-  GEMINI_NARRATIVE: 24 * 3600,
-  GEMINI_CONTEXT_LONG: 7 * 24 * 3600,
-  PRICE_QUOTE: 60,
-  FUND_NAV_DAY: 24 * 3600,
-} as const;
