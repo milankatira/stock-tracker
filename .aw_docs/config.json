@@ -1,0 +1,22 @@
+{
+  "docs": {
+    "outputMode": "dual"
+  },
+  "sync": {
+    "eager": true,
+    "batch_threshold": 10,
+    "mcp_memory_enabled": true,
+    "github_docs": {
+      "enabled": true,
+      "repo": "GoHighLevel/ghl-aw-docs",
+      "dest": "aw_docs",
+      "teamofone_base_url": "https://devtools.servers.stg.msgsndr.net/too/docs/GoHighLevel/ghl-aw-docs"
+    }
+  },
+  "paths": {
+    "runs": ".aw_docs/runs",
+    "learnings": ".aw_docs/learnings",
+    "tasks": ".aw_docs/tasks",
+    "cache": ".aw_docs/cache"
+  }
+}
