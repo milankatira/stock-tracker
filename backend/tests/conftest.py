@@ -12,6 +12,9 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+import mongomock
+
+from app import db
 from app.cache import cache
 from app.main import app
 from app.services import market_data
@@ -254,6 +257,15 @@ def _clear_cache():
     cache.clear()
     yield
     cache.clear()
+
+
+@pytest.fixture
+def mongo_watchlist(monkeypatch):
+    """In-memory watchlist collection — mirrors the `_ticker` seam so tests
+    never touch a real cluster. Returns the collection for direct assertions."""
+    collection = mongomock.MongoClient()["tracker"]["watchlist"]
+    monkeypatch.setattr(db, "get_collection", lambda: collection)
+    return collection
 
 
 @pytest.fixture
