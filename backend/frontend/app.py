@@ -80,8 +80,8 @@ def c_financials(base, sym, statement, freq):
 
 
 @st.cache_data(ttl=30, show_spinner=False)
-def c_batch(base, symbols_csv):
-    return api.batch_quotes(base, [s for s in symbols_csv.split(",") if s])
+def c_watchlist(base):
+    return api.watchlist_quotes(base)
 
 
 def safe(fn, *args):
@@ -102,9 +102,7 @@ with st.sidebar:
     if submitted and symbol_in.strip():
         st.session_state["symbol"] = symbol_in.strip().upper()
     st.divider()
-    st.caption("Watchlist (comma-separated)")
-    watchlist_in = st.text_area("Watchlist", value="AAPL,MSFT,NVDA,GOOGL,AMZN",
-                                label_visibility="collapsed")
+    st.caption("Watchlist is saved in MongoDB — see the Watchlist tab.")
 
 
 # --- health gate (loud, once) ------------------------------------------------
@@ -128,6 +126,16 @@ def render_header():
     with c1:
         st.markdown(f"### {name}")
         st.caption(symbol)
+        with st.popover("➕ Add to Watchlist"):
+            note = st.text_input("Note (optional)", key=f"wl_note_{symbol}",
+                                 placeholder="e.g. oversold, watching for entry")
+            if st.button("Save", key=f"wl_add_{symbol}", type="primary"):
+                _, add_err = safe(api.watchlist_add, base_url, symbol, note)
+                if add_err:
+                    st.error(add_err)
+                else:
+                    c_watchlist.clear()
+                    st.toast(f"Added {symbol} to watchlist", icon="✅")
     with c2:
         if quote_data:
             chg = quote_data.get("change_percent")
@@ -351,33 +359,36 @@ with tabs[6]:
     else:
         st.info("No news available.")
 
-# --- Watchlist ---------------------------------------------------------------
+# --- Watchlist (persisted in MongoDB) ----------------------------------------
 with tabs[7]:
-    symbols = [s.strip().upper() for s in watchlist_in.split(",") if s.strip()]
-    if not symbols:
-        st.info("Add comma-separated tickers in the sidebar.")
+    c_head, c_refresh = st.columns([5, 1])
+    c_head.caption("Saved in MongoDB. Open any stock and click ➕ Add to Watchlist.")
+    if c_refresh.button("↻ Refresh", key="wl_refresh"):
+        c_watchlist.clear()
+        st.rerun()
+
+    wl, wl_err = safe(c_watchlist, base_url)
+    if wl_err:
+        st.warning(wl_err)
+    elif not wl:
+        st.info("Watchlist is empty. Add a symbol from its profile header.")
     else:
-        batch, batch_err = safe(c_batch, base_url, ",".join(symbols))
-        if batch_err:
-            st.warning(batch_err)
-        elif batch:
-            rows = []
-            for q in batch:
-                rows.append({
-                    "Symbol": q.get("symbol"),
-                    "Price": q.get("last_price"),
-                    "Change %": q.get("change_percent"),
-                    "Market Cap": q.get("market_cap"),
-                    # surface the per-symbol error rather than a silent all-null row
-                    "Status": q.get("error") or "ok",
-                })
-            df = pd.DataFrame(rows)
-            st.dataframe(
-                df.style.map(
-                    lambda v: f"color: {'#22c55e' if (v or 0) >= 0 else '#dc2626'}"
-                    if isinstance(v, (int, float)) else "",
-                    subset=["Change %"],
-                ).format({"Price": "{:.2f}", "Change %": "{:.2f}%", "Market Cap": "{:,.0f}"},
-                         na_rep="—"),
-                width='stretch', hide_index=True,
-            )
+        for q in wl:
+            sym = q.get("symbol")
+            cols = st.columns([2, 2, 2, 4, 1])
+            chg = q.get("change_percent")
+            cols[0].metric(sym, theme.fmt(q.get("last_price")),
+                           f"{chg:.2f}%" if isinstance(chg, (int, float)) else None)
+            cols[1].metric("Market Cap", theme.fmt(q.get("market_cap"), money=True))
+            cols[2].metric("Prev Close", theme.fmt(q.get("previous_close")))
+            note = q.get("note")
+            status = q.get("error")
+            cols[3].caption((f"📝 {note}" if note else "") +
+                            (f"  ⚠️ {status}" if status else ""))
+            if cols[4].button("🗑", key=f"wl_rm_{sym}", help=f"Remove {sym}"):
+                _, rm_err = safe(api.watchlist_remove, base_url, sym)
+                if rm_err:
+                    st.error(rm_err)
+                else:
+                    c_watchlist.clear()
+                    st.rerun()
