@@ -52,7 +52,11 @@ charts/tables — right tool for a local single-user research dashboard.
   breakdown — and surfaces the backend's `methodology`, limitation and disclaimer.
 - **Chart**: candlestick + SMA50/200 overlay + volume + RSI(14); defaults to 2y
   so SMA200 actually renders.
-- **Watchlist**: batch table that surfaces per-symbol `error` (no silent nulls).
+- **Add to Watchlist**: a popover in the profile header saves the current symbol
+  (with an optional note) to the MongoDB-backed watchlist.
+- **Watchlist tab**: lists saved symbols with live quotes + notes, a per-row
+  remove button, and refresh; surfaces per-symbol `error` (no silent nulls). A
+  503 here means MongoDB is not configured/reachable.
 - Backend URL is configurable in the sidebar (`STOCK_API_URL` env override). If
   the backend is down, the UI shows one loud error and stops.
 
@@ -93,6 +97,27 @@ Generated automatically by FastAPI — no manual spec:
 | GET | `/v1/stocks/{symbol}/news?limit=10` | Recent headlines |
 | GET | `/v1/stocks/{symbol}/score?w_fundamental=0.5&w_technical=0.3&w_sentiment=0.2` | **Composite score + buy-setup verdict** |
 | GET | `/v1/stocks/{symbol}/research` | Consolidated report (all of the above) |
+| POST | `/v1/watchlist` | Add/re-add a symbol (`{symbol, note?}`) — persisted in MongoDB |
+| GET | `/v1/watchlist` | List saved watchlist entries (newest first) |
+| GET | `/v1/watchlist/quotes` | Watchlist entries enriched with live quotes |
+| DELETE | `/v1/watchlist/{symbol}` | Remove a symbol from the watchlist |
+
+## Watchlist (MongoDB)
+
+A personal, single-user watchlist persisted in MongoDB Atlas. Adds are
+idempotent — re-adding a symbol updates its `note` and keeps the original
+`added_at` (unique index on `symbol`). `/v1/watchlist/quotes` joins live prices
+on read via the same batch path as `/v1/stocks/quotes`; nothing price-related is
+stored. If `MONGODB_URI` is unset or the cluster is unreachable, watchlist
+routes return **503** (with a fast `serverSelectionTimeoutMS`), never a 500.
+
+Configure via `.env` (copy from `.env.example`):
+
+```
+MONGODB_URI=mongodb+srv://USER:PASSWORD@cluster0.example.mongodb.net/?retryWrites=true&w=majority
+MONGODB_DB=tracker
+WATCHLIST_COLLECTION=watchlist
+```
 
 ## Scoring engine (`/score`)
 
@@ -185,3 +210,7 @@ Pretty-print with `| python -m json.tool` or `| jq`.
 | `SLOW_TTL` | `1800` | History/statements/analysis cache (s) |
 | `NEWS_TTL` | `600` | News cache (s) |
 | `CORS_ORIGINS` | `*` | Comma-separated allow-list |
+| `MONGODB_URI` | _(empty)_ | Atlas connection string for the watchlist; empty → watchlist routes 503 |
+| `MONGODB_DB` | `tracker` | Database name for the watchlist |
+| `WATCHLIST_COLLECTION` | `watchlist` | Collection name |
+| `MONGODB_TIMEOUT_MS` | `5000` | Server-selection timeout (fail fast on a down cluster) |
