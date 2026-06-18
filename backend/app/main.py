@@ -17,7 +17,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import RedirectResponse
 
 from app import __version__, config, schemas
-from app.routers import stocks
+from app.routers import stocks, watchlist
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("stock_api")
@@ -34,6 +34,7 @@ Finance data.
 * **/analysis** — analyst price targets & recommendation trend
 * **/news** — recent headlines
 * **/research** — everything above in one consolidated report
+* **/watchlist** — save symbols (MongoDB) and pull live quotes for them
 
 Data is sourced from Yahoo Finance via `yfinance` and is for research/education
 only — not investment advice.
@@ -80,6 +81,7 @@ async def log_requests(request: Request, call_next):
 
 
 app.include_router(stocks.router)
+app.include_router(watchlist.router)
 
 
 @app.get("/", include_in_schema=False)

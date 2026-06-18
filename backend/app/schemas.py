@@ -8,6 +8,8 @@ so `/docs` reads like documentation. We deliberately do NOT model all 184
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -266,3 +268,29 @@ class ScoreReport(BaseModel):
 
 class ErrorResponse(BaseModel):
     detail: str
+
+
+# --- Watchlist ------------------------------------------------------------
+
+
+class WatchlistAdd(BaseModel):
+    """Request body to add (or re-add) a symbol to the watchlist."""
+
+    symbol: str = Field(..., description="Ticker symbol, e.g. AAPL.", examples=["AAPL"])
+    note: str | None = Field(
+        None, max_length=500, description="Optional free-text note, e.g. 'oversold, watching for entry'."
+    )
+
+
+class WatchlistItem(BaseModel):
+    """A persisted watchlist entry."""
+
+    symbol: str = Field(..., description="Normalized ticker symbol.")
+    note: str | None = Field(None, description="Optional free-text note.")
+    added_at: datetime = Field(..., description="UTC timestamp the symbol was first added.")
+
+
+class WatchlistQuote(Quote):
+    """A watchlist entry enriched with its live quote and note."""
+
+    note: str | None = Field(None, description="Optional free-text note carried from the watchlist.")
