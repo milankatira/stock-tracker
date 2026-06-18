@@ -11,6 +11,8 @@ dependencies = [
     "pydantic>=2.9",
     "pandas>=2.2",
     "lxml>=5.0",
+    "pymongo[srv]>=4.9",  # [srv] pulls dnspython, required for mongodb+srv:// URIs
+    "python-dotenv>=1.0",
 ]
 
 [project.optional-dependencies]
@@ -18,6 +20,7 @@ dev = [
     "pytest>=8.0",
     "httpx>=0.27",
     "ruff>=0.6",
+    "mongomock>=4.1",  # in-memory MongoDB for watchlist tests (no network)
 ]
 ui = [
     "streamlit>=1.58",  # width='stretch' API (replaces removed use_container_width); verified version
