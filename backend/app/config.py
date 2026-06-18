@@ -9,6 +9,12 @@ from __future__ import annotations
 
 import os
 
+from dotenv import load_dotenv
+
+# Load backend/.env (gitignored) so secrets stay out of source. No-op in prod
+# where real env vars are already set.
+load_dotenv()
+
 # --- Cache TTLs (seconds) -------------------------------------------------
 # Live snapshot: changes every tick during market hours.
 QUOTE_TTL: int = int(os.getenv("QUOTE_TTL", "30"))
@@ -25,3 +31,14 @@ NEWS_TTL: int = int(os.getenv("NEWS_TTL", "600"))
 CORS_ORIGINS: list[str] = [
     o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()
 ]
+
+# --- MongoDB (watchlist persistence) --------------------------------------
+# Connection string loaded from env/.env — never hardcoded. Empty by default so
+# imports never fail; the watchlist routes surface a clean 503 if it is unset.
+MONGODB_URI: str = os.getenv("MONGODB_URI", "")
+# Database + collection names (the SRV URI already names a default db, but we
+# stay explicit so the watchlist is portable across clusters).
+MONGODB_DB: str = os.getenv("MONGODB_DB", "tracker")
+WATCHLIST_COLLECTION: str = os.getenv("WATCHLIST_COLLECTION", "watchlist")
+# Fail fast on a down/unreachable cluster instead of pymongo's 30s default.
+MONGODB_TIMEOUT_MS: int = int(os.getenv("MONGODB_TIMEOUT_MS", "5000"))
